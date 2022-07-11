@@ -2,8 +2,8 @@ import 'package:floor/floor.dart';
 
 @Entity(tableName: SubscriptionGroupEntity.TABLE_NAME)
 class SubscriptionGroupEntity {
-  @primaryKey
-  int id;
+  @PrimaryKey(autoGenerate: true)
+  int? id;
   String name;
   int iconId;
 

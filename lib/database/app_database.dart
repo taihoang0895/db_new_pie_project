@@ -24,7 +24,13 @@ abstract class AppDatabase extends FloorDatabase {
   SubscriptionDetailDao get subscriptionDetailDao;
   SubscriptionGroupDao get subscriptionGroupDao;
 
+  QueryAdapter buildQueryAdapter(){
+      return QueryAdapter(database, changeListener);
+  }
+
   void notifyTableChanged(String tableName){
     changeListener.add(tableName);
+
+
   }
 }

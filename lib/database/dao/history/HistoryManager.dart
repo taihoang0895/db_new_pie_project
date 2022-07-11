@@ -1,5 +1,6 @@
 import 'package:db_new_pie_project/database/entities/history/StreamHistoryEntity.dart';
 import 'package:db_new_pie_project/database/entities/history/StreamStateEntity.dart';
+import 'package:floor/floor.dart';
 
 import '../../app_database.dart';
 import '../../entities/stream/StreamEntity.dart';
@@ -7,11 +8,40 @@ import '../stream/StreamHistory.dart';
 
 class HistoryManager {
   final AppDatabase _appDatabase;
+  final QueryAdapter _queryAdapter;
 
-  /*Stream<List<StreamHistory>> get streamHistories =>
-      _appDatabase.historyDao.watchAllStreamHistory();*/
 
-  HistoryManager(this._appDatabase);
+  HistoryManager(this._appDatabase) : _queryAdapter = _appDatabase.buildQueryAdapter();
+
+  Stream<List<StreamHistory>> findAllStreamHistoryAsStream(){
+    String sql = 'SELECT * FROM (SELECT ${StreamHistoryEntity.TABLE_NAME}.*, ${StreamEntity.TABLE_NAME}.* FROM ${StreamHistoryEntity.TABLE_NAME} INNER JOIN ${StreamEntity.TABLE_NAME} ON ${StreamHistoryEntity.TABLE_NAME}.streamId = ${StreamEntity.TABLE_NAME}.uid) as stream_records'
+        ' INNER JOIN ${StreamStateEntity.TABLE_NAME} ON ${StreamStateEntity.TABLE_NAME}.streamId = stream_records.streamId ORDER BY stream_records.accessDate DESC';
+
+    return _queryAdapter.queryListStream(sql,
+        mapper: (Map<String, Object?> row) => StreamHistory(
+            row['progressTime'] as int,
+            StreamHistoryEntity(
+              row['streamId'] as int,
+              row['accessDate'] as int,
+              row['repeatCount'] as int,
+            ),
+            StreamEntity(
+              row['uid'] as int,
+              row['url'] as String,
+              row['tile'] as String,
+              row['streamType'] as String,
+              row['duration'] as int,
+              row['uploader'] as String,
+              row['uploaderUrl'] as String,
+              row['viewCount'] as int,
+              row['textualUploadDate'] as String,
+              row['uploadDate'] as int,
+            )
+
+        ),
+        queryableName: StreamHistoryEntity.TABLE_NAME,
+        isView: false);
+  }
 
   Future<List<StreamHistoryEntity>> findAllHistoryEntities() {
     return _appDatabase.historyDao.findAllStreamHistoryEntities();
@@ -25,9 +55,8 @@ class HistoryManager {
     return _appDatabase.historyDao.clearStreamHistory().then((value) => _appDatabase.notifyTableChanged(StreamHistoryEntity.TABLE_NAME));
   }
 
-  Stream<List<StreamHistoryEntity>> findAllHistoryEntitiesAsStream(
-      {int limit = 30}) {
-    return _appDatabase.historyDao.watchStreamHistoryEntities(limit);
+  Stream<List<StreamHistoryEntity>> findAllHistoryEntitiesAsStream() {
+    return _appDatabase.historyDao.findAllStreamHistoryEntitiesAsStream();
   }
 
   Future<void> save(int streamId) {
@@ -36,7 +65,9 @@ class HistoryManager {
         .then((streamHistory) {
       if (streamHistory == null) {
         _appDatabase.historyDao.insertStreamHistory(StreamHistoryEntity(
-            streamId, DateTime.now().millisecondsSinceEpoch, 0));
+            streamId, DateTime.now().millisecondsSinceEpoch, 0)).then((value){
+          _appDatabase.historyDao.insertStreamStateEntity(StreamStateEntity(streamId, 0));
+        });
       } else {
         streamHistory.accessDate = DateTime.now().millisecondsSinceEpoch;
         _appDatabase.historyDao.updateStreamHistory(streamHistory);

@@ -5,17 +5,20 @@ import '../stream/StreamHistory.dart';
 
 class StreamManager {
   final AppDatabase _appDatabase;
-  Stream<List<StreamEntity>> get streams => _appDatabase.streamDao.watchAll();
+
   StreamManager(this._appDatabase);
   
   Future<void> clear(){
     return _appDatabase.streamDao.clear();
   }
 
+  Stream<List<StreamEntity>> findAllAsStream() => _appDatabase.streamDao.findAllAsStream();
+
   Future<void> insert(StreamEntity entity){
     return _appDatabase.streamDao.insertStream(entity);
   }
-  Future<void> insertList(List<StreamEntity> entites){
+
+  Future<void> insertEntities(List<StreamEntity> entites){
     return _appDatabase.streamDao.insertStreams(entites);
   }
 
@@ -27,7 +30,7 @@ class StreamManager {
   }
 
   Stream<StreamEntity?> findFirstOrNull(int id){
-    return _appDatabase.streamDao.watchStream(id);
+    return _appDatabase.streamDao.findByIdAsStream(id);
   }
 
   Future<void> delete(StreamEntity entity){

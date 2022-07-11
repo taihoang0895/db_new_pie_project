@@ -35,7 +35,7 @@ void main() {
     expect(records.length, 1);
     expect(records[0].uid, entity1.uid);
     List<StreamEntity> entities = List.unmodifiable([fakeStreamEntity(2), fakeStreamEntity(3)]);
-    await streamManager.insertList(entities);
+    await streamManager.insertEntities(entities);
     records = await streamManager.findAll();
     expect(records.length, 3);
 
@@ -60,7 +60,7 @@ void main() {
     StreamEntity entity1 = fakeStreamEntity(1);
     await streamManager.insert(entity1);
 
-    Stream<List<StreamEntity>> listStreams = streamManager.streams;
+    Stream<List<StreamEntity>> listStreams = streamManager.findAllAsStream();
     List<StreamEntity> latest = List.empty();
     listStreams.listen((streams) {
         latest = streams;

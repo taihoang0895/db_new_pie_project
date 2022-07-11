@@ -6,12 +6,12 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:db_new_pie_project/database/app_database.dart';
-import 'package:db_new_pie_project/database/dao/subscription/SubscriptionGroup.dart';
 import 'package:db_new_pie_project/database/dao/subscription/SubscriptionManager.dart';
 import 'package:db_new_pie_project/database/entities/history/SearchHistoryEntity.dart';
 import 'package:db_new_pie_project/database/dao/history/SearchHistoryManager.dart';
 import 'package:db_new_pie_project/database/entities/subscription/SubscriptionDetailEntity.dart';
 import 'package:db_new_pie_project/database/entities/subscription/SubscriptionEntity.dart';
+import 'package:db_new_pie_project/database/entities/subscription/SubscriptionGroupEntity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -34,110 +34,129 @@ void main() {
     return database;
   }
 
-  test('create new channel group', () async {
+  test('save  channel group', () async {
     AppDatabase database = await init();
     SubscriptionManager subscriptionManager = SubscriptionManager(database);
-    List<SubscriptionGroup> latest = List.empty();
-    subscriptionManager.findAllSubscriptionGroupAsStream().listen((event) {
-      latest = event;
-    });
-
-    await subscriptionManager.createChannelGroup("abc", List.empty(), icon: 1);
-
-    List<SubscriptionGroup> subscriptionGroups =
-        await subscriptionManager.findAllSubscriptionGroup();
-
-    expect(subscriptionGroups.length, 1);
-    expect(subscriptionGroups[0].subscriptionGroup.name, "abc");
-    expect(subscriptionGroups[0].subscriptionGroup.iconId, 1);
-    expect(subscriptionGroups[0].subscriptions.length, 0);
-    await Future.delayed(Duration(milliseconds: 500));
-    expect(latest.length, 1);
-    expect(latest[0].subscriptionGroup.name, "abc");
-    expect(latest[0].subscriptionGroup.iconId, 1);
-    expect(latest[0].subscriptions.length, 0);
-
-    SubscriptionEntity subscriptionEntity1 = fakeSubscriptionEntity(1);
-    SubscriptionEntity subscriptionEntity2 = fakeSubscriptionEntity(2);
-    subscriptionManager
-        .insertSubscriptions([subscriptionEntity1, subscriptionEntity2]);
-    List<SubscriptionEntity> subscriptionEntities =
-        await subscriptionManager.findAllSubscriptions();
-
-    await subscriptionManager.createChannelGroup("abc2", subscriptionEntities,
-        icon: 1);
-
-    subscriptionGroups = await subscriptionManager.findAllSubscriptionGroup();
-    expect(subscriptionGroups.length, 2);
-    expect(subscriptionGroups[0].subscriptionGroup.name, "abc2");
-    expect(subscriptionGroups[0].subscriptionGroup.iconId, 1);
-    expect(subscriptionGroups[0].subscriptions.length, 2);
-    await Future.delayed(Duration(milliseconds: 500));
-    expect(latest.length, 1);
-    expect(latest[0].subscriptionGroup.name, "abc2");
-    expect(latest[0].subscriptionGroup.iconId, 1);
-    expect(latest[0].subscriptions.length, 2);
-  });
-
-  test('delete channel group', () async {
-    AppDatabase database = await init();
-    SubscriptionManager subscriptionManager = SubscriptionManager(database);
-    List<SubscriptionGroup> latest = List.empty();
+    List<SubscriptionGroupEntity> latest = List.empty();
     subscriptionManager.findAllSubscriptionGroupAsStream().listen((event) {
       latest = event;
     });
 
     SubscriptionEntity subscriptionEntity1 = fakeSubscriptionEntity(1);
     SubscriptionEntity subscriptionEntity2 = fakeSubscriptionEntity(2);
-    subscriptionManager
+    await subscriptionManager
         .insertSubscriptions([subscriptionEntity1, subscriptionEntity2]);
     List<SubscriptionEntity> subscriptionEntities =
     await subscriptionManager.findAllSubscriptions();
 
-    await subscriptionManager.createChannelGroup("abc2", subscriptionEntities,
-        icon: 1);
+    await subscriptionManager.saveChannelGroup(SubscriptionGroupEntity(null, "abc", 1), subscriptionEntities);
 
     await Future.delayed(Duration(milliseconds: 500));
     expect(latest.length, 1);
-    expect(latest[0].subscriptionGroup.name, "abc2");
-    expect(latest[0].subscriptionGroup.iconId, 1);
-    expect(latest[0].subscriptions.length, 1);
+    expect(latest[0].name, "abc");
+    expect(latest[0].iconId, 1);
 
+    List<SubscriptionEntity> subscriptions = await subscriptionManager.findSubscriptionsOfGroup(latest[0].id!);
+    expect(subscriptions.length, 2);
+    expect(subscriptions[0].id, subscriptionEntities[0].id);
+    expect(subscriptions[1].id, subscriptionEntities[1].id);
 
-    subscriptionManager.deleteChannelGroup(latest[0].subscriptionGroup.id);
+    await subscriptionManager.saveChannelGroup(SubscriptionGroupEntity(latest[0].id!, "abc2", 2), subscriptionEntities);
     await Future.delayed(Duration(milliseconds: 500));
-    expect(latest.length, 0);
+    expect(latest.length, 1);
+    expect(latest[0].name, "abc2");
+    expect(latest[0].iconId, 2);
+    subscriptions = await subscriptionManager.findSubscriptionsOfGroup(latest[0].id!);
+    expect(subscriptions.length, 2);
+    expect(subscriptions[0].id, subscriptionEntities[0].id);
+    expect(subscriptions[1].id, subscriptionEntities[1].id);
+
   });
 
   test('delete channel group', () async {
+      // fake data
+      AppDatabase database = await init();
+      SubscriptionManager subscriptionManager = SubscriptionManager(database);
+      List<SubscriptionGroupEntity> latest = List.empty();
+      subscriptionManager.findAllSubscriptionGroupAsStream().listen((event) {
+        latest = event;
+      });
+
+      SubscriptionEntity subscriptionEntity1 = fakeSubscriptionEntity(1);
+      SubscriptionEntity subscriptionEntity2 = fakeSubscriptionEntity(2);
+      await subscriptionManager
+          .insertSubscriptions([subscriptionEntity1, subscriptionEntity2]);
+      List<SubscriptionEntity> subscriptionEntities =
+      await subscriptionManager.findAllSubscriptions();
+
+      await subscriptionManager.saveChannelGroup(SubscriptionGroupEntity(null, "abc", 1), subscriptionEntities);
+
+      // test
+      await Future.delayed(Duration(milliseconds: 500));
+      expect(latest.length, 1);
+      final groupId = latest[0].id!;
+      await subscriptionManager.deleteChannelGroup(groupId);
+
+      await Future.delayed(Duration(milliseconds: 500));
+      expect(latest.length, 0);
+      List<SubscriptionEntity>  subscriptions = await subscriptionManager.findSubscriptionsOfGroup(groupId);
+      expect(subscriptions.length, 0);
+  });
+
+  test('delete channel', () async {
+      // fake data
+      AppDatabase database = await init();
+      SubscriptionManager subscriptionManager = SubscriptionManager(database);
+
+      SubscriptionEntity subscriptionEntity1 = fakeSubscriptionEntity(1);
+      SubscriptionEntity subscriptionEntity2 = fakeSubscriptionEntity(2);
+      await subscriptionManager
+          .insertSubscriptions([subscriptionEntity1, subscriptionEntity2]);
+
+      List<SubscriptionEntity> latest = List.empty();
+      subscriptionManager.findAllSubscriptionsAsStream().listen((event) {
+        latest = event;
+      });
+      await Future.delayed(Duration(milliseconds: 500));
+      expect(latest.length, 2);
+
+      await subscriptionManager.deleteSubscriptionById(latest[0].id!);
+      await Future.delayed(Duration(milliseconds: 500));
+      expect(latest.length, 1);
+  });
+
+  test('save find subscriptions of group as stream', () async {
     AppDatabase database = await init();
     SubscriptionManager subscriptionManager = SubscriptionManager(database);
-    List<SubscriptionGroup> latest = List.empty();
+    List<SubscriptionGroupEntity> latest = List.empty();
     subscriptionManager.findAllSubscriptionGroupAsStream().listen((event) {
       latest = event;
     });
 
     SubscriptionEntity subscriptionEntity1 = fakeSubscriptionEntity(1);
     SubscriptionEntity subscriptionEntity2 = fakeSubscriptionEntity(2);
-    subscriptionManager
+    await subscriptionManager
         .insertSubscriptions([subscriptionEntity1, subscriptionEntity2]);
     List<SubscriptionEntity> subscriptionEntities =
-        await subscriptionManager.findAllSubscriptions();
+    await subscriptionManager.findAllSubscriptions();
 
-    await subscriptionManager.createChannelGroup("abc2", subscriptionEntities,
-        icon: 1);
+    await subscriptionManager.saveChannelGroup(SubscriptionGroupEntity(null, "abc", 1), subscriptionEntities);
 
     await Future.delayed(Duration(milliseconds: 500));
     expect(latest.length, 1);
-    expect(latest[0].subscriptionGroup.name, "abc2");
-    expect(latest[0].subscriptionGroup.iconId, 1);
-    expect(latest[0].subscriptions.length, 1);
-
-
-    subscriptionManager.deleteChannelGroup(latest[0].subscriptionGroup.id);
+    expect(latest[0].name, "abc");
+    expect(latest[0].iconId, 1);
+    List<SubscriptionEntity>  latestSubscription = List.empty();
+    subscriptionManager.findSubscriptionsOfGroupAsStream(latest[0].id!).listen((event) {
+        latestSubscription = event;
+    });
     await Future.delayed(Duration(milliseconds: 500));
-    expect(latest.length, 0);
-    List<SubscriptionDetailEntity> subscriptionDetailEntities = await database.subscriptionDetailDao.findByGroupId(latest[0].subscriptionGroup.id);
-    expect(subscriptionDetailEntities.length, 0);
+    expect(latestSubscription.length, 2);
+
+    await subscriptionManager.deleteSubscriptionById(latestSubscription[0].id!);
+    await Future.delayed(Duration(milliseconds: 500));
+    expect(latestSubscription.length, 1);
+
   });
+
 }

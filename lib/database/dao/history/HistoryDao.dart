@@ -32,9 +32,6 @@ abstract class SearchHistoryDao{
   @Query("SELECT *  FROM ${SearchHistoryEntity.TABLE_NAME} WHERE search LIKE :text || '%' order by creationDate DESC LIMIT :limit")
   Stream<List<SearchHistoryEntity>> findSimilarText(String text, int limit);
 
-  /*@Query('SELECT * FROM ${StreamHistoryEntity.TABLE_NAME}')
-  Stream<List<StreamHistory>> watchAllStreamHistory();*/
-
   @Query('SELECT * FROM ${StreamHistoryEntity.TABLE_NAME} WHERE streamId = :streamId LIMIT 1')
   Future<StreamHistoryEntity?> firstOrNullStreamHistory(int streamId);
 
@@ -47,8 +44,8 @@ abstract class SearchHistoryDao{
   @Update(onConflict:OnConflictStrategy.replace)
   Future<void> updateStreamHistory(StreamHistoryEntity entity);
 
-  @Query("SELECT * FROM ${StreamHistoryEntity.TABLE_NAME} order by accessDate DESC LIMIT :limit")
-  Stream<List<StreamHistoryEntity>> watchStreamHistoryEntities(int limit);
+  @Query("SELECT * FROM ${StreamHistoryEntity.TABLE_NAME} order by accessDate DESC")
+  Stream<List<StreamHistoryEntity>> findAllStreamHistoryEntitiesAsStream();
 
   @Query('DELETE FROM ${StreamHistoryEntity.TABLE_NAME} WHERE streamId = :id')
   Future<void> deleteStreamHistory(int id);

@@ -6,6 +6,7 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:db_new_pie_project/database/app_database.dart';
+import 'package:db_new_pie_project/database/dao/stream/StreamHistory.dart';
 import 'package:db_new_pie_project/database/dao/stream/StreamManager.dart';
 import 'package:db_new_pie_project/database/entities/history/StreamHistoryEntity.dart';
 import 'package:db_new_pie_project/database/entities/history/StreamStateEntity.dart';
@@ -38,7 +39,7 @@ void main() {
     StreamManager streamManager = new StreamManager(database);
     StreamEntity streamEntity1 = fakeStreamEntity(1);
     StreamEntity streamEntity2 = fakeStreamEntity(2);
-    streamManager.insertList([streamEntity1, streamEntity2]);
+    streamManager.insertEntities([streamEntity1, streamEntity2]);
 
     await historyManager.save(streamEntity1.uid);
     List<StreamHistoryEntity> records = await historyManager.findAllHistoryEntities();
@@ -64,7 +65,7 @@ void main() {
     StreamManager streamManager = new StreamManager(database);
     StreamEntity streamEntity1 = fakeStreamEntity(1);
     StreamEntity streamEntity2 = fakeStreamEntity(2);
-    streamManager.insertList([streamEntity1, streamEntity2]);
+    streamManager.insertEntities([streamEntity1, streamEntity2]);
 
     List<StreamHistoryEntity> latest = List.empty();
 
@@ -72,11 +73,11 @@ void main() {
       latest = records;
     });
     await historyManager.save(streamEntity1.uid);
-    await Future.delayed(Duration(milliseconds: 500));
+    await Future.delayed(Duration(milliseconds: 1000));
     expect(latest.length, 1);
 
     await historyManager.delete(latest[0].streamId);
-    await Future.delayed(Duration(milliseconds: 500));
+    await Future.delayed(Duration(milliseconds: 1000));
     expect(latest.length, 0);
   });
 
@@ -86,7 +87,7 @@ void main() {
     StreamManager streamManager = new StreamManager(database);
     StreamEntity streamEntity1 = fakeStreamEntity(1);
     StreamEntity streamEntity2 = fakeStreamEntity(2);
-    streamManager.insertList([streamEntity1, streamEntity2]);
+    streamManager.insertEntities([streamEntity1, streamEntity2]);
 
     List<StreamHistoryEntity> latest = List.empty();
 
@@ -95,11 +96,11 @@ void main() {
     });
     await historyManager.save(streamEntity1.uid);
     await historyManager.save(streamEntity2.uid);
-    await Future.delayed(Duration(milliseconds: 500));
+    await Future.delayed(Duration(milliseconds: 1000));
     expect(latest.length, 2);
 
     await historyManager.clear();
-    await Future.delayed(Duration(milliseconds: 500));
+    await Future.delayed(Duration(milliseconds: 1000));
     expect(latest.length, 0);
   });
 
@@ -109,7 +110,7 @@ void main() {
     StreamManager streamManager = new StreamManager(database);
     StreamEntity streamEntity1 = fakeStreamEntity(1);
     StreamEntity streamEntity2 = fakeStreamEntity(2);
-    streamManager.insertList([streamEntity1, streamEntity2]);
+    streamManager.insertEntities([streamEntity1, streamEntity2]);
 
     await historyManager.updateProgressTime(streamEntity1.uid, 5000);
     StreamStateEntity? streamState = await historyManager.firstOrNullStreamState(streamEntity1.uid);
@@ -129,7 +130,7 @@ void main() {
     StreamManager streamManager = new StreamManager(database);
     StreamEntity streamEntity1 = fakeStreamEntity(1);
     StreamEntity streamEntity2 = fakeStreamEntity(2);
-    streamManager.insertList([streamEntity1, streamEntity2]);
+    streamManager.insertEntities([streamEntity1, streamEntity2]);
 
     List<StreamHistoryEntity> latest = List.empty();
 
@@ -157,6 +158,27 @@ void main() {
     expect(latest[0].repeatCount, 2);
     expect(latest[1].streamId, streamEntity2.uid);
     expect(latest[1].repeatCount, 1);
+  });
+
+  test('Find Stream History As Stream', () async {
+    AppDatabase database = await init();
+    HistoryManager historyManager = HistoryManager(database);
+    StreamManager streamManager = new StreamManager(database);
+    StreamEntity streamEntity1 = fakeStreamEntity(1);
+    StreamEntity streamEntity2 = fakeStreamEntity(2);
+    streamManager.insertEntities([streamEntity1, streamEntity2]);
+
+    List<StreamHistory> latest = List.empty();
+
+   await historyManager.save(streamEntity1.uid);
+
+    historyManager.findAllStreamHistoryAsStream().listen((event) {
+       latest = event;
+    });
+
+    await Future.delayed(Duration(milliseconds: 500));
+    expect(latest.length, 1);
+
   });
 
 }

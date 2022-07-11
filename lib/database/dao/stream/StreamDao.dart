@@ -17,10 +17,10 @@ abstract class StreamDao{
   Future<void> deleteStream(StreamEntity entity);
 
   @Query('SELECT * FROM ${StreamEntity.TABLE_NAME}')
-  Stream<List<StreamEntity>> watchAll();
+  Stream<List<StreamEntity>> findAllAsStream();
 
   @Query('SELECT * FROM ${StreamEntity.TABLE_NAME} WHERE uid = :id')
-  Stream<StreamEntity?> watchStream(int id);
+  Stream<StreamEntity?> findByIdAsStream(int id);
 
   @Query('SELECT * FROM ${StreamEntity.TABLE_NAME}')
   Future<List<StreamEntity>> findAll();
