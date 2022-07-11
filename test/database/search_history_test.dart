@@ -7,7 +7,7 @@
 
 import 'package:db_new_pie_project/database/app_database.dart';
 import 'package:db_new_pie_project/database/entities/history/SearchHistoryEntity.dart';
-import 'package:db_new_pie_project/database/history/SearchHistoryManager.dart';
+import 'package:db_new_pie_project/database/dao/history/SearchHistoryManager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -18,7 +18,7 @@ void main() {
   Future<SearchHistoryManager> init() async {
     sqfliteFfiInit();
     AppDatabase database =
-        await $FloorAppDatabase.databaseBuilder('app_database.db').build();
+        await $FloorAppDatabase.inMemoryDatabaseBuilder().build();
     SearchHistoryManager searchHistoryManager =
         new SearchHistoryManager(database);
     searchHistoryManager.clear();
@@ -28,29 +28,77 @@ void main() {
   test('Insert a search history', () async {
     SearchHistoryManager searchHistoryManager = await init();
 
-    await searchHistoryManager.insert("abc");
+    await searchHistoryManager.onSearched("abc");
     List<SearchHistoryEntity> records = await searchHistoryManager.findAll();
 
     expect(records.length, 1);
     expect(records[0].search, "abc");
+
+    await searchHistoryManager.onSearched("abc1");
+    records = await searchHistoryManager.findAll();
+    expect(records.length, 2);
+    expect(records[0].search, "abc1");
+    expect(records[1].search, "abc");
+
+    await searchHistoryManager.onSearched("abc");
+    records = await searchHistoryManager.findAll();
+    expect(records.length, 2);
+    expect(records[0].search, "abc");
+    expect(records[1].search, "abc1");
   });
 
   test('Delete a search history', () async {
     SearchHistoryManager searchHistoryManager = await init();
 
-    searchHistoryManager.insert("abc");
+    await searchHistoryManager.onSearched("abc");
     List<SearchHistoryEntity> records = await searchHistoryManager.findAll();
     searchHistoryManager.delete(records[0].id!);
     records = await searchHistoryManager.findAll();
     expect(records.length, 0);
   });
 
-  test('Find similar text', () async {
+  test('Find Similar Text', () async {
     SearchHistoryManager searchHistoryManager = await init();
-    searchHistoryManager.insert("abc");
-    searchHistoryManager.insert("abc");
 
-    List<SearchHistoryEntity> records = await searchHistoryManager.findSimilarText("abc");
-    expect(records.length, 1);
+    await searchHistoryManager.onSearched("abc");
+    List<SearchHistoryEntity> latest = List.empty();
+    searchHistoryManager.findSimilarText("a").listen((records) {
+      latest = records;
+    });
+    await Future.delayed(Duration(milliseconds: 500));
+    expect(latest.length, 1);
+    expect(latest[0].search, "abc");
+
+    await searchHistoryManager.onSearched("acb");
+    await Future.delayed(Duration(milliseconds: 500));
+    expect(latest.length, 2);
+    expect(latest[0].search, "acb");
+    expect(latest[1].search, "abc");
+
+    await searchHistoryManager.delete(latest[0].id!);
+    await Future.delayed(Duration(milliseconds: 500));
+    expect(latest.length, 1);
+    expect(latest[0].search, "abc");
+  });
+
+  test('Find Similar Text With Empty Text', () async {
+    SearchHistoryManager searchHistoryManager = await init();
+
+    await searchHistoryManager.onSearched("abc1");
+    await searchHistoryManager.onSearched("abc2");
+    await searchHistoryManager.onSearched("abc3");
+
+    List<SearchHistoryEntity> latest = List.empty();
+    searchHistoryManager.findSimilarText("").listen((records) {
+      latest = records;
+    });
+    await Future.delayed(Duration(milliseconds: 500));
+    expect(latest.length, 3);
+    await searchHistoryManager.delete(latest[1].id!);
+
+    await Future.delayed(Duration(milliseconds: 500));
+    expect(latest.length, 2);
+    expect(latest[0].search, "abc3");
+    expect(latest[1].search, "abc1");
   });
 }

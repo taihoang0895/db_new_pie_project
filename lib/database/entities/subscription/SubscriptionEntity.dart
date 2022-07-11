@@ -1,12 +1,17 @@
+import 'package:floor/floor.dart';
+
+@Entity(tableName: SubscriptionEntity.TABLE_NAME)
 class SubscriptionEntity {
-  int id;
+  @PrimaryKey(autoGenerate: true)
+  int? id;
   String url;
   String name;
   String avatarUrl;
-  int subcriberCount;
+  int subscriberCount;
   String description;
-  bool notificationMode;
 
   SubscriptionEntity(this.id, this.url, this.name, this.avatarUrl,
-      this.subcriberCount, this.description, this.notificationMode);
+      this.subscriberCount, this.description);
+
+  static const String TABLE_NAME = "Subscription";
 }
