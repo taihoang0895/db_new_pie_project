@@ -9,7 +9,7 @@ import 'dart:math';
 
 import 'package:db_new_pie_project/database/app_database.dart';
 import 'package:db_new_pie_project/database/dao/history/history_dao.dart';
-import 'package:db_new_pie_project/database/dao/history/histoty_manager.dart';
+import 'package:db_new_pie_project/database/managers/history_manager.dart';
 import 'package:db_new_pie_project/database/dao/playlist/play_list_dao.dart';
 import 'package:db_new_pie_project/database/dao/playlist/play_list_details_dao.dart';
 import 'package:db_new_pie_project/database/manager/play_list_manager.dart';
@@ -22,6 +22,7 @@ import 'package:db_new_pie_project/database/entities/playlist/play_list_detail_e
 import 'package:db_new_pie_project/database/entities/stream/stream_entity.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+/*
 
 void main() {
   Future<AppDatabase> init() async {
@@ -230,3 +231,4 @@ void main() {
     expect(list[0].streamEntity.uid, "3");
   });
 }
+*/

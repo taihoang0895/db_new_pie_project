@@ -7,6 +7,6 @@ class StreamStateEntity {
   int progressTime;
 
   StreamStateEntity(this.streamId, this.progressTime);
-  static const String tableName = "StreamState";
 
+  static const String tableName = "StreamState";
 }

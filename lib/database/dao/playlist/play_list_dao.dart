@@ -1,4 +1,3 @@
-
 import 'package:floor/floor.dart';
 
 import '../../entities/playlist/play_list_entity.dart';
@@ -14,7 +13,8 @@ abstract class PlaylistDao {
   @Query('SELECT * FROM $playListTableName')
   Future<List<PlaylistEntity>> findAll();
 
-  @Query('SELECT * FROM $playListTableName WHERE $playListTableName.id = :playListID')
+  @Query(
+      'SELECT * FROM $playListTableName WHERE $playListTableName.id = :playListID')
   Future<PlaylistEntity?> findPlayListByID(int playListID);
 
   @Insert(onConflict: OnConflictStrategy.replace)
@@ -31,5 +31,4 @@ abstract class PlaylistDao {
 
   @Query('DELETE FROM $playListTableName')
   Future<void> clearPLayList();
-
 }

@@ -2,7 +2,9 @@ import 'package:floor/floor.dart';
 
 const playListDetailTableName = "PlaylistDetail";
 
-@Entity(tableName: PlaylistDetailEntity.tableName, primaryKeys: ['playlistId', 'streamId'])
+@Entity(
+    tableName: PlaylistDetailEntity.tableName,
+    primaryKeys: ['playlistId', 'streamId'])
 class PlaylistDetailEntity {
   int playlistId;
 
@@ -22,5 +24,5 @@ class PlaylistDetailEntity {
             joinIndex: obj.joinIndex);
 
   static const int defaultJoinIndex = 0;
-  static const String tableName ="PlaylistDetail";
+  static const String tableName = "PlaylistDetail";
 }
