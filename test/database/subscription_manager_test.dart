@@ -7,16 +7,11 @@
 
 import 'package:db_new_pie_project/database/app_database.dart';
 import 'package:db_new_pie_project/database/dao/subscription/SubscriptionManager.dart';
-import 'package:db_new_pie_project/database/entities/history/SearchHistoryEntity.dart';
-import 'package:db_new_pie_project/database/dao/history/SearchHistoryManager.dart';
-import 'package:db_new_pie_project/database/entities/subscription/SubscriptionDetailEntity.dart';
 import 'package:db_new_pie_project/database/entities/subscription/SubscriptionEntity.dart';
 import 'package:db_new_pie_project/database/entities/subscription/SubscriptionGroupEntity.dart';
-import 'package:flutter/material.dart';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-
-import 'package:db_new_pie_project/main.dart';
 
 SubscriptionEntity fakeSubscriptionEntity(int num) {
   return SubscriptionEntity(

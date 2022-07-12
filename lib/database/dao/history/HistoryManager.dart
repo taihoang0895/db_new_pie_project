@@ -13,7 +13,7 @@ class HistoryManager {
 
   HistoryManager(this._appDatabase) : _queryAdapter = _appDatabase.buildQueryAdapter();
 
-  Stream<List<StreamHistory>> findAllStreamHistoryAsStream(){
+  Stream<List<StreamHistory>> findAllAsStream(){
     String sql = 'SELECT * FROM (SELECT ${StreamHistoryEntity.TABLE_NAME}.*, ${StreamEntity.TABLE_NAME}.* FROM ${StreamHistoryEntity.TABLE_NAME} INNER JOIN ${StreamEntity.TABLE_NAME} ON ${StreamHistoryEntity.TABLE_NAME}.streamId = ${StreamEntity.TABLE_NAME}.uid) as stream_records'
         ' INNER JOIN ${StreamStateEntity.TABLE_NAME} ON ${StreamStateEntity.TABLE_NAME}.streamId = stream_records.streamId ORDER BY stream_records.accessDate DESC';
 
@@ -43,7 +43,7 @@ class HistoryManager {
         isView: false);
   }
 
-  Future<List<StreamHistoryEntity>> findAllHistoryEntities() {
+  Future<List<StreamHistoryEntity>> findAll() {
     return _appDatabase.historyDao.findAllStreamHistoryEntities();
   }
 
@@ -59,20 +59,22 @@ class HistoryManager {
     return _appDatabase.historyDao.findAllStreamHistoryEntitiesAsStream();
   }
 
-  Future<void> save(int streamId) {
-    return _appDatabase.historyDao
-        .firstOrNullStreamHistory(streamId)
-        .then((streamHistory) {
-      if (streamHistory == null) {
-        _appDatabase.historyDao.insertStreamHistory(StreamHistoryEntity(
-            streamId, DateTime.now().millisecondsSinceEpoch, 0)).then((value){
-          _appDatabase.historyDao.insertStreamStateEntity(StreamStateEntity(streamId, 0));
-        });
-      } else {
-        streamHistory.accessDate = DateTime.now().millisecondsSinceEpoch;
-        _appDatabase.historyDao.updateStreamHistory(streamHistory);
-      }
-    });
+  @transaction
+  Future<void> save(int streamId) async{
+    var streamHistory = await _appDatabase.historyDao.firstOrNullStreamHistory(streamId);
+    var streamState = await _appDatabase.historyDao.firstOrNullStreamState(streamId);
+
+    if(streamState == null){
+      _appDatabase.historyDao.insertStreamStateEntity(StreamStateEntity(streamId, 0));
+    }
+
+    if (streamHistory == null) {
+      await _appDatabase.historyDao.insertStreamHistory(StreamHistoryEntity(streamId, DateTime.now().millisecondsSinceEpoch, 0));
+    } else {
+      streamHistory.accessDate = DateTime.now().millisecondsSinceEpoch;
+      await _appDatabase.historyDao.updateStreamHistory(streamHistory);
+    }
+
   }
 
   Future<void> updateProgressTime(int streamId, int time) {

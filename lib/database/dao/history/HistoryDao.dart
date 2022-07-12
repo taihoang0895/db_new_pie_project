@@ -29,8 +29,8 @@ abstract class SearchHistoryDao{
   @Query('SELECT *  FROM ${SearchHistoryEntity.TABLE_NAME} WHERE search = :text LIMIT 1')
   Future<SearchHistoryEntity?> firstOrNull(String text);
 
-  @Query("SELECT *  FROM ${SearchHistoryEntity.TABLE_NAME} WHERE search LIKE :text || '%' order by creationDate DESC LIMIT :limit")
-  Stream<List<SearchHistoryEntity>> findSimilarText(String text, int limit);
+  @Query("SELECT *  FROM ${SearchHistoryEntity.TABLE_NAME} WHERE search LIKE :text || '%' order by creationDate DESC")
+  Stream<List<SearchHistoryEntity>> findSimilarText(String text);
 
   @Query('SELECT * FROM ${StreamHistoryEntity.TABLE_NAME} WHERE streamId = :streamId LIMIT 1')
   Future<StreamHistoryEntity?> firstOrNullStreamHistory(int streamId);

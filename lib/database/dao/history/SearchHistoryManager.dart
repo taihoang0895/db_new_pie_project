@@ -28,12 +28,12 @@ class SearchHistoryManager {
     return searchHistoryDao.deleteSearchHistory(id).then((value) => _appDatabase.notifyTableChanged(SearchHistoryEntity.TABLE_NAME));
   }
 
-  Stream<List<SearchHistoryEntity>> findSimilarText(String text, {int limit=30}) {
+  Stream<List<SearchHistoryEntity>> findSimilarText(String text) {
     if (text.trim().isEmpty) {
       return _appDatabase.historyDao.findAllAsStream();
     } else {
       final SearchHistoryDao searchHistoryDao = _appDatabase.historyDao;
-      return searchHistoryDao.findSimilarText(text, limit);
+      return searchHistoryDao.findSimilarText(text);
     }
   }
 

@@ -42,18 +42,18 @@ void main() {
     streamManager.insertEntities([streamEntity1, streamEntity2]);
 
     await historyManager.save(streamEntity1.uid);
-    List<StreamHistoryEntity> records = await historyManager.findAllHistoryEntities();
+    List<StreamHistoryEntity> records = await historyManager.findAll();
     expect(records.length, 1);
     expect(records[0].streamId, streamEntity1.uid);
 
     await historyManager.save(streamEntity2.uid);
-    records = await historyManager.findAllHistoryEntities();
+    records = await historyManager.findAll();
     expect(records.length, 2);
     expect(records[0].streamId, streamEntity2.uid);
     expect(records[1].streamId, streamEntity1.uid);
 
     await historyManager.save(streamEntity1.uid);
-    records = await historyManager.findAllHistoryEntities();
+    records = await historyManager.findAll();
     expect(records.length, 2);
     expect(records[1].streamId, streamEntity2.uid);
     expect(records[0].streamId, streamEntity1.uid);
@@ -172,13 +172,42 @@ void main() {
 
    await historyManager.save(streamEntity1.uid);
 
-    historyManager.findAllStreamHistoryAsStream().listen((event) {
+    historyManager.findAllAsStream().listen((event) {
        latest = event;
     });
 
     await Future.delayed(Duration(milliseconds: 500));
     expect(latest.length, 1);
+    expect(latest[0].progressTime, 0);
 
+    expect(latest[0].streamEntity.uid, streamEntity1.uid);
+    expect(latest[0].streamEntity.url, streamEntity1.url);
+    expect(latest[0].streamEntity.tile, streamEntity1.tile);
+    expect(latest[0].streamEntity.streamType, streamEntity1.streamType);
+    expect(latest[0].streamEntity.duration, streamEntity1.duration);
+    expect(latest[0].streamEntity.uploader, streamEntity1.uploader);
+    expect(latest[0].streamEntity.uploaderUrl, streamEntity1.uploaderUrl);
+    expect(latest[0].streamEntity.viewCount, streamEntity1.viewCount);
+    expect(latest[0].streamEntity.uploadDate, streamEntity1.uploadDate);
+
+
+    await historyManager.save(streamEntity2.uid);
+
+    await Future.delayed(Duration(milliseconds: 500));
+    expect(latest.length, 2);
+    expect(latest[0].progressTime, 0);
+
+    expect(latest[0].streamEntity.uid, streamEntity2.uid);
+    expect(latest[0].streamEntity.url, streamEntity2.url);
+    expect(latest[0].streamEntity.tile, streamEntity2.tile);
+    expect(latest[0].streamEntity.streamType, streamEntity2.streamType);
+    expect(latest[0].streamEntity.duration, streamEntity2.duration);
+    expect(latest[0].streamEntity.uploader, streamEntity2.uploader);
+    expect(latest[0].streamEntity.uploaderUrl, streamEntity2.uploaderUrl);
+    expect(latest[0].streamEntity.viewCount, streamEntity2.viewCount);
+    expect(latest[0].streamEntity.uploadDate, streamEntity2.uploadDate);
   });
+
+
 
 }
