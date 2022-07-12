@@ -80,7 +80,7 @@ extension StreamTypeOf on String{
       return StreamType.NONE;
    }
 }
-@Entity(tableName: StreamEntity.TABLE_NAME)
+@Entity(tableName: StreamEntity.tableName)
 class StreamEntity{
    @primaryKey
    int uid;
@@ -106,5 +106,5 @@ class StreamEntity{
        this.textualUploadDate,
       this.uploadDate);
    StreamType get type => streamType.toStreamType();
-   static const String TABLE_NAME = "Stream";
+   static const String tableName = "Stream";
 }

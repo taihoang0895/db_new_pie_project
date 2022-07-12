@@ -1,7 +1,7 @@
 import 'package:db_new_pie_project/database/app_database.dart';
-import 'package:db_new_pie_project/database/entities/history/SearchHistoryEntity.dart';
+import 'package:db_new_pie_project/database/entities/history/search_history_entity.dart';
 
-import 'HistoryDao.dart';
+import 'history_dao.dart';
 
 class SearchHistoryManager {
   final AppDatabase _appDatabase;
@@ -25,7 +25,7 @@ class SearchHistoryManager {
 
   Future<void> delete(int id) {
     final SearchHistoryDao searchHistoryDao = _appDatabase.historyDao;
-    return searchHistoryDao.deleteSearchHistory(id).then((value) => _appDatabase.notifyTableChanged(SearchHistoryEntity.TABLE_NAME));
+    return searchHistoryDao.deleteSearchHistory(id).then((value) => _appDatabase.notifyTableChanged(SearchHistoryEntity.tableName));
   }
 
   Stream<List<SearchHistoryEntity>> findSimilarText(String text, {int limit=30}) {
@@ -39,7 +39,7 @@ class SearchHistoryManager {
 
   Future<void> clear() {
     final SearchHistoryDao searchHistoryDao = _appDatabase.historyDao;
-    return searchHistoryDao.clearSearchHistory().then((value) => _appDatabase.notifyTableChanged(SearchHistoryEntity.TABLE_NAME));
+    return searchHistoryDao.clearSearchHistory().then((value) => _appDatabase.notifyTableChanged(SearchHistoryEntity.tableName));
   }
 
   Future<List<SearchHistoryEntity>> findAll() {

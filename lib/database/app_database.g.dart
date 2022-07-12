@@ -71,6 +71,10 @@ class _$AppDatabase extends AppDatabase {
 
   SubscriptionGroupDao? _subscriptionGroupDaoInstance;
 
+  PlaylistDao? _playListDaoInstance;
+
+  PlayListDetailsDao? _detailsDaoInstance;
+
   Future<sqflite.Database> open(String path, List<Migration> migrations,
       [Callback? callback]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
@@ -103,6 +107,10 @@ class _$AppDatabase extends AppDatabase {
             'CREATE TABLE IF NOT EXISTS `SubscriptionGroup` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL, `iconId` INTEGER NOT NULL)');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `SubscriptionDetail` (`groupId` INTEGER NOT NULL, `subscriptionId` INTEGER NOT NULL, PRIMARY KEY (`groupId`, `subscriptionId`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `Playlist` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL)');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `PlaylistDetail` (`playlistId` INTEGER NOT NULL, `streamId` INTEGER NOT NULL, `joinIndex` INTEGER NOT NULL, PRIMARY KEY (`playlistId`, `streamId`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -136,6 +144,17 @@ class _$AppDatabase extends AppDatabase {
   SubscriptionGroupDao get subscriptionGroupDao {
     return _subscriptionGroupDaoInstance ??=
         _$SubscriptionGroupDao(database, changeListener);
+  }
+
+  @override
+  PlaylistDao get playListDao {
+    return _playListDaoInstance ??= _$PlaylistDao(database, changeListener);
+  }
+
+  @override
+  PlayListDetailsDao get detailsDao {
+    return _detailsDaoInstance ??=
+        _$PlayListDetailsDao(database, changeListener);
   }
 }
 
@@ -495,7 +514,7 @@ class _$StreamDao extends StreamDao {
   @override
   Future<void> insertStream(StreamEntity entity) async {
     await _streamEntityInsertionAdapter.insert(
-        entity, OnConflictStrategy.abort);
+        entity, OnConflictStrategy.replace);
   }
 
   @override
@@ -868,5 +887,212 @@ class _$SubscriptionGroupDao extends SubscriptionGroupDao {
   @override
   Future<void> deleteEntity(SubscriptionGroupEntity entity) async {
     await _subscriptionGroupEntityDeletionAdapter.delete(entity);
+  }
+}
+
+class _$PlaylistDao extends PlaylistDao {
+  _$PlaylistDao(this.database, this.changeListener)
+      : _queryAdapter = QueryAdapter(database, changeListener),
+        _playlistEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'Playlist',
+            (PlaylistEntity item) =>
+                <String, Object?>{'id': item.id, 'name': item.name},
+            changeListener),
+        _playlistEntityUpdateAdapter = UpdateAdapter(
+            database,
+            'Playlist',
+            ['id'],
+            (PlaylistEntity item) =>
+                <String, Object?>{'id': item.id, 'name': item.name},
+            changeListener),
+        _playlistEntityDeletionAdapter = DeletionAdapter(
+            database,
+            'Playlist',
+            ['id'],
+            (PlaylistEntity item) =>
+                <String, Object?>{'id': item.id, 'name': item.name},
+            changeListener);
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<PlaylistEntity> _playlistEntityInsertionAdapter;
+
+  final UpdateAdapter<PlaylistEntity> _playlistEntityUpdateAdapter;
+
+  final DeletionAdapter<PlaylistEntity> _playlistEntityDeletionAdapter;
+
+  @override
+  Stream<List<PlaylistEntity>> findAllAsStream() {
+    return _queryAdapter.queryListStream('SELECT * FROM Playlist',
+        mapper: (Map<String, Object?> row) =>
+            PlaylistEntity(row['id'] as int, row['name'] as String),
+        queryableName: 'Playlist',
+        isView: false);
+  }
+
+  @override
+  Future<List<PlaylistEntity>> findAll() async {
+    return _queryAdapter.queryList('SELECT * FROM Playlist',
+        mapper: (Map<String, Object?> row) =>
+            PlaylistEntity(row['id'] as int, row['name'] as String));
+  }
+
+  @override
+  Future<PlaylistEntity?> findPlayListByID(int playListID) async {
+    return _queryAdapter.query('SELECT * FROM Playlist WHERE Playlist.id = ?1',
+        mapper: (Map<String, Object?> row) =>
+            PlaylistEntity(row['id'] as int, row['name'] as String),
+        arguments: [playListID]);
+  }
+
+  @override
+  Future<void> deletePlayListByID(int playListId) async {
+    await _queryAdapter.queryNoReturn('DELETE FROM Playlist WHERE id = ?1',
+        arguments: [playListId]);
+  }
+
+  @override
+  Future<void> clearPLayList() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM Playlist');
+  }
+
+  @override
+  Future<void> addPlaylist(PlaylistEntity playList) async {
+    await _playlistEntityInsertionAdapter.insert(
+        playList, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<int> renamePlayList(PlaylistEntity playlistEntity) {
+    return _playlistEntityUpdateAdapter.updateAndReturnChangedRows(
+        playlistEntity, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<int> deletePlayList(PlaylistEntity playlistEntity) {
+    return _playlistEntityDeletionAdapter
+        .deleteAndReturnChangedRows(playlistEntity);
+  }
+}
+
+class _$PlayListDetailsDao extends PlayListDetailsDao {
+  _$PlayListDetailsDao(this.database, this.changeListener)
+      : _queryAdapter = QueryAdapter(database, changeListener),
+        _playlistDetailEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'PlaylistDetail',
+            (PlaylistDetailEntity item) => <String, Object?>{
+                  'playlistId': item.playlistId,
+                  'streamId': item.streamId,
+                  'joinIndex': item.joinIndex
+                },
+            changeListener),
+        _playlistDetailEntityUpdateAdapter = UpdateAdapter(
+            database,
+            'PlaylistDetail',
+            ['playlistId', 'streamId'],
+            (PlaylistDetailEntity item) => <String, Object?>{
+                  'playlistId': item.playlistId,
+                  'streamId': item.streamId,
+                  'joinIndex': item.joinIndex
+                },
+            changeListener),
+        _playlistDetailEntityDeletionAdapter = DeletionAdapter(
+            database,
+            'PlaylistDetail',
+            ['playlistId', 'streamId'],
+            (PlaylistDetailEntity item) => <String, Object?>{
+                  'playlistId': item.playlistId,
+                  'streamId': item.streamId,
+                  'joinIndex': item.joinIndex
+                },
+            changeListener);
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<PlaylistDetailEntity>
+      _playlistDetailEntityInsertionAdapter;
+
+  final UpdateAdapter<PlaylistDetailEntity> _playlistDetailEntityUpdateAdapter;
+
+  final DeletionAdapter<PlaylistDetailEntity>
+      _playlistDetailEntityDeletionAdapter;
+
+  @override
+  Future<List<StreamStateEntity>> getStreamFromPlayList(int playListId) async {
+    return _queryAdapter.queryList(
+        'SELECT pl.*,st.* FROM Playlist pl INNER JOIN  PlaylistDetail dt on pl.id = dt.playlistId INNER JOIN Stream st ON st.uid = dt.streamId INNER JOIN StreamState sst ON st.uid = sst.streamId WHERE pl.id = ?1 ORDER BY dt.joinIndex ASC',
+        mapper: (Map<String, Object?> row) => StreamStateEntity(row['streamId'] as int, row['progressTime'] as int),
+        arguments: [playListId]);
+  }
+
+  @override
+  Future<List<PlaylistDetailEntity>> getPlayListDetail(int playListId) async {
+    return _queryAdapter.queryList(
+        'SELECT * FROM PlaylistDetail p WHERE p.playlistId = ?1',
+        mapper: (Map<String, Object?> row) => PlaylistDetailEntity(
+            playlistId: row['playlistId'] as int,
+            streamId: row['streamId'] as int,
+            joinIndex: row['joinIndex'] as int),
+        arguments: [playListId]);
+  }
+
+  @override
+  Future<void> deleteStreamFromPlayList(int playListId, int streamId) async {
+    await _queryAdapter.queryNoReturn(
+        'DELETE FROM PlaylistDetail WHERE PlaylistDetail.playlistId = ?1 AND PlaylistDetail.streamId = ?2',
+        arguments: [playListId, streamId]);
+  }
+
+  @override
+  Future<void> clearDetails() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM PlaylistDetail');
+  }
+
+  @override
+  Future<List<PlaylistDetailEntity>> findAll() async {
+    return _queryAdapter.queryList('SELECT * FROM PlaylistDetail',
+        mapper: (Map<String, Object?> row) => PlaylistDetailEntity(
+            playlistId: row['playlistId'] as int,
+            streamId: row['streamId'] as int,
+            joinIndex: row['joinIndex'] as int));
+  }
+
+  @override
+  Stream<List<PlaylistDetailEntity>> findAllAsStream() {
+    return _queryAdapter.queryListStream('SELECT * FROM PlaylistDetail',
+        mapper: (Map<String, Object?> row) => PlaylistDetailEntity(
+            playlistId: row['playlistId'] as int,
+            streamId: row['streamId'] as int,
+            joinIndex: row['joinIndex'] as int),
+        queryableName: 'PlaylistDetail',
+        isView: false);
+  }
+
+  @override
+  Future<void> addPlaylistDetail(PlaylistDetailEntity detailEntity) async {
+    await _playlistDetailEntityInsertionAdapter.insert(
+        detailEntity, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> updatePlayListDetail(PlaylistDetailEntity detailEntity) async {
+    await _playlistDetailEntityUpdateAdapter.update(
+        detailEntity, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<int> deletePlayListDetail(PlaylistDetailEntity detailEntity) {
+    return _playlistDetailEntityDeletionAdapter
+        .deleteAndReturnChangedRows(detailEntity);
   }
 }

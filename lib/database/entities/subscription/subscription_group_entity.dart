@@ -1,6 +1,6 @@
 import 'package:floor/floor.dart';
 
-@Entity(tableName: SubscriptionGroupEntity.TABLE_NAME)
+@Entity(tableName: SubscriptionGroupEntity.tableName)
 class SubscriptionGroupEntity {
   @PrimaryKey(autoGenerate: true)
   int? id;
@@ -8,5 +8,5 @@ class SubscriptionGroupEntity {
   int iconId;
 
   SubscriptionGroupEntity(this.id, this.name, this.iconId);
-  static const String TABLE_NAME = "SubscriptionGroup";
+  static const String tableName = "SubscriptionGroup";
 }

@@ -1,9 +1,9 @@
-import 'package:db_new_pie_project/database/entities/subscription/SubscriptionDetailEntity.dart';
-import 'package:db_new_pie_project/database/entities/subscription/SubscriptionGroupEntity.dart';
+import 'package:db_new_pie_project/database/entities/subscription/subscription_detail_entity.dart';
+import 'package:db_new_pie_project/database/entities/subscription/subscription_group_entity.dart';
 import 'package:floor/floor.dart';
 
 import '../../app_database.dart';
-import '../../entities/subscription/SubscriptionEntity.dart';
+import '../../entities/subscription/subscription_entity.dart';
 
 class SubscriptionManager {
   final AppDatabase _appDatabase;
@@ -58,8 +58,8 @@ class SubscriptionManager {
   ) async {
     await _appDatabase.subscriptionDetailDao.deleteByGroupId(groupId);
     await _appDatabase.subscriptionGroupDao.deleteById(groupId).then((value) {
-      _appDatabase.notifyTableChanged(SubscriptionDetailEntity.TABLE_NAME);
-      _appDatabase.notifyTableChanged(SubscriptionGroupEntity.TABLE_NAME);
+      _appDatabase.notifyTableChanged(SubscriptionDetailEntity.tableName);
+      _appDatabase.notifyTableChanged(SubscriptionGroupEntity.tableName);
     });
   }
 
@@ -112,6 +112,6 @@ class SubscriptionManager {
     int id,
   ) {
     return _appDatabase.subscriptionDao.deleteById(id).then((value) =>
-        _appDatabase.notifyTableChanged(SubscriptionEntity.TABLE_NAME));
+        _appDatabase.notifyTableChanged(SubscriptionEntity.tableName));
   }
 }

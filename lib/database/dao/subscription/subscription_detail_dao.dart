@@ -1,7 +1,7 @@
-import 'package:db_new_pie_project/database/entities/subscription/SubscriptionDetailEntity.dart';
+import 'package:db_new_pie_project/database/entities/subscription/subscription_detail_entity.dart';
 import 'package:floor/floor.dart';
 
-import '../../entities/subscription/SubscriptionEntity.dart';
+import '../../entities/subscription/subscription_entity.dart';
 
 @dao
 abstract class SubscriptionDetailDao {
@@ -26,30 +26,30 @@ abstract class SubscriptionDetailDao {
   );
 
   @Query(
-      "DELETE FROM ${SubscriptionDetailEntity.TABLE_NAME} WHERE groupId = :groupId AND subscriptionId = :subscriptionId")
+      "DELETE FROM ${SubscriptionDetailEntity.tableName} WHERE groupId = :groupId AND subscriptionId = :subscriptionId")
   Future<void> deleteById(
     int groupId,
     int subscriptionId,
   );
 
   @Query(
-      "DELETE FROM ${SubscriptionDetailEntity.TABLE_NAME} WHERE groupId = :groupId")
+      "DELETE FROM ${SubscriptionDetailEntity.tableName} WHERE groupId = :groupId")
   Future<void> deleteByGroupId(
     int groupId,
   );
 
   @Query(
-      "SELECT * FROM ${SubscriptionDetailEntity.TABLE_NAME} WHERE groupId = :groupId")
+      "SELECT * FROM ${SubscriptionDetailEntity.tableName} WHERE groupId = :groupId")
   Future<List<SubscriptionDetailEntity>> findByGroupId(
     int groupId,
   );
 
-  @Query("SELECT * FROM ${SubscriptionDetailEntity.TABLE_NAME}")
+  @Query("SELECT * FROM ${SubscriptionDetailEntity.tableName}")
   Future<List<SubscriptionDetailEntity>> findAll();
 
-  @Query("SELECT * FROM ${SubscriptionDetailEntity.TABLE_NAME}")
+  @Query("SELECT * FROM ${SubscriptionDetailEntity.tableName}")
   Stream<List<SubscriptionDetailEntity>> findAllAsStream();
 
-  @Query("DELETE FROM ${SubscriptionDetailEntity.TABLE_NAME}")
+  @Query("DELETE FROM ${SubscriptionDetailEntity.tableName}")
   Future<void> clear();
 }

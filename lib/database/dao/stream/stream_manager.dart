@@ -1,7 +1,7 @@
 
 import '../../app_database.dart';
-import '../../entities/stream/StreamEntity.dart';
-import '../stream/StreamHistory.dart';
+import '../../entities/stream/stream_entity.dart';
+import '../stream/stream_history.dart';
 
 class StreamManager {
   final AppDatabase _appDatabase;
@@ -24,7 +24,7 @@ class StreamManager {
 
   Future<void> deleteById(int id){
     var result = _appDatabase.streamDao.deleteStreamById(id);
-    result.then((value) => _appDatabase.notifyTableChanged(StreamEntity.TABLE_NAME));
+    result.then((value) => _appDatabase.notifyTableChanged(StreamEntity.tableName));
     return result;
 
   }

@@ -1,7 +1,7 @@
-import 'package:db_new_pie_project/database/entities/subscription/SubscriptionGroupEntity.dart';
+import 'package:db_new_pie_project/database/entities/subscription/subscription_group_entity.dart';
 import 'package:floor/floor.dart';
 
-import '../../entities/subscription/SubscriptionEntity.dart';
+import '../../entities/subscription/subscription_entity.dart';
 
 @dao
 abstract class SubscriptionGroupDao {
@@ -20,21 +20,21 @@ abstract class SubscriptionGroupDao {
     SubscriptionGroupEntity entity,
   );
 
-  @Query("DELETE FROM ${SubscriptionGroupEntity.TABLE_NAME} WHERE id=:id")
+  @Query("DELETE FROM ${SubscriptionGroupEntity.tableName} WHERE id=:id")
   Future<void> deleteById(
     int id,
   );
 
-  @Query("SELECT * FROM ${SubscriptionGroupEntity.TABLE_NAME}")
+  @Query("SELECT * FROM ${SubscriptionGroupEntity.tableName}")
   Future<List<SubscriptionGroupEntity>> findAll();
 
-  @Query("SELECT * FROM ${SubscriptionGroupEntity.TABLE_NAME}")
+  @Query("SELECT * FROM ${SubscriptionGroupEntity.tableName}")
   Stream<List<SubscriptionGroupEntity>> findAllAsStream();
 
-  @Query("DELETE FROM ${SubscriptionGroupEntity.TABLE_NAME}")
+  @Query("DELETE FROM ${SubscriptionGroupEntity.tableName}")
   Future<void> clear();
 
-  @Query("SELECT * FROM ${SubscriptionGroupEntity.TABLE_NAME} WHERE id = :id")
+  @Query("SELECT * FROM ${SubscriptionGroupEntity.tableName} WHERE id = :id")
   Future<SubscriptionGroupEntity?> firstOrNull(
     int id,
   );
