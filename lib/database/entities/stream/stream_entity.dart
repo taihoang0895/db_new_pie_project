@@ -83,7 +83,7 @@ extension StreamTypeOf on String{
 @Entity(tableName: StreamEntity.tableName)
 class StreamEntity{
    @primaryKey
-   int uid;
+   String uid;
    String url;
    String tile;
    String streamType;

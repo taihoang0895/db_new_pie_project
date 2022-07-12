@@ -6,7 +6,7 @@ const playListDetailTableName = "PlaylistDetail";
 class PlaylistDetailEntity {
   int playlistId;
 
-  int streamId;
+  String streamId;
 
   int joinIndex;
 

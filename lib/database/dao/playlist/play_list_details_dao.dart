@@ -20,9 +20,8 @@ abstract class PlayListDetailsDao {
   Future<void> deletePlayListDetailById(int playListId);
 
 
-  @Query(  'SELECT pl.*,st.* FROM ${PlaylistEntity.tableName} pl INNER JOIN  ${PlaylistDetailEntity.tableName} dt on pl.id = dt.playlistId INNER JOIN ${StreamEntity.tableName} st ON st.uid = dt.streamId INNER JOIN ${StreamStateEntity.tableName} sst ON st.uid = sst.streamId WHERE pl.id = :playListId ORDER BY dt.joinIndex ASC')
-  Future<List<StreamStateEntity>> getStreamFromPlayList(int playListId);
-
+  @Query('SELECT dt.*,st.*,sst.* FROM ${PlaylistEntity.tableName} pl INNER JOIN ${PlaylistDetailEntity.tableName} dt ON pl.id = dt.playlistId INNER JOIN ${StreamEntity.tableName} st ON st.uid = dt.streamId INNER JOIN ${StreamStateEntity.tableName} sst ON st.uid = sst.streamId WHERE pl.id = :playListId ORDER BY dt.joinIndex ASC')
+  Future<List<PlaylistDetailEntity>> getStreamFromPlayList(int playListId);
 
   @Query(
       "SELECT * FROM $playListDetailTableName p WHERE p.playlistId = :playListId")
@@ -30,7 +29,7 @@ abstract class PlayListDetailsDao {
 
   @Query(
       "DELETE FROM $playListDetailTableName WHERE PlaylistDetail.playlistId = :playListId AND PlaylistDetail.streamId = :streamId ")
-  Future<void> deleteStreamFromPlayList(int playListId, int streamId);
+  Future<void> deleteStreamFromPlayList(int playListId, String streamId);
 
   @Query('DELETE FROM $playListDetailTableName')
   Future<void> clearDetails();

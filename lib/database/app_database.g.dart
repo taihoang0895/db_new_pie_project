@@ -96,11 +96,11 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `SearchHistory` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `search` TEXT NOT NULL, `creationDate` INTEGER NOT NULL)');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `Stream` (`uid` INTEGER NOT NULL, `url` TEXT NOT NULL, `tile` TEXT NOT NULL, `streamType` TEXT NOT NULL, `duration` INTEGER NOT NULL, `uploader` TEXT NOT NULL, `uploaderUrl` TEXT NOT NULL, `viewCount` INTEGER NOT NULL, `textualUploadDate` TEXT NOT NULL, `uploadDate` INTEGER NOT NULL, PRIMARY KEY (`uid`))');
+            'CREATE TABLE IF NOT EXISTS `Stream` (`uid` TEXT NOT NULL, `url` TEXT NOT NULL, `tile` TEXT NOT NULL, `streamType` TEXT NOT NULL, `duration` INTEGER NOT NULL, `uploader` TEXT NOT NULL, `uploaderUrl` TEXT NOT NULL, `viewCount` INTEGER NOT NULL, `textualUploadDate` TEXT NOT NULL, `uploadDate` INTEGER NOT NULL, PRIMARY KEY (`uid`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `History` (`streamId` INTEGER NOT NULL, `accessDate` INTEGER NOT NULL, `repeatCount` INTEGER NOT NULL, PRIMARY KEY (`streamId`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `StreamState` (`streamId` INTEGER NOT NULL, `progressTime` INTEGER NOT NULL, PRIMARY KEY (`streamId`))');
+            'CREATE TABLE IF NOT EXISTS `StreamState` (`streamId` TEXT NOT NULL, `progressTime` INTEGER NOT NULL, PRIMARY KEY (`streamId`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `Subscription` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `url` TEXT NOT NULL, `name` TEXT NOT NULL, `avatarUrl` TEXT NOT NULL, `subscriberCount` INTEGER NOT NULL, `description` TEXT NOT NULL)');
         await database.execute(
@@ -110,7 +110,7 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `Playlist` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL)');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `PlaylistDetail` (`playlistId` INTEGER NOT NULL, `streamId` INTEGER NOT NULL, `joinIndex` INTEGER NOT NULL, PRIMARY KEY (`playlistId`, `streamId`))');
+            'CREATE TABLE IF NOT EXISTS `PlaylistDetail` (`playlistId` INTEGER NOT NULL, `streamId` TEXT NOT NULL, `joinIndex` INTEGER NOT NULL, PRIMARY KEY (`playlistId`, `streamId`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -337,17 +337,17 @@ class _$SearchHistoryDao extends SearchHistoryDao {
   }
 
   @override
-  Future<StreamStateEntity?> firstOrNullStreamState(int streamId) async {
+  Future<StreamStateEntity?> firstOrNullStreamState(String streamId) async {
     return _queryAdapter.query('SELECT * FROM StreamState WHERE streamId = ?1',
         mapper: (Map<String, Object?> row) => StreamStateEntity(
-            row['streamId'] as int, row['progressTime'] as int),
+            row['streamId'] as String, row['progressTime'] as int),
         arguments: [streamId]);
   }
 
   @override
   Future<void> insertSearchHistory(SearchHistoryEntity entity) async {
     await _searchHistoryEntityInsertionAdapter.insert(
-        entity, OnConflictStrategy.abort);
+        entity, OnConflictStrategy.replace);
   }
 
   @override
@@ -457,7 +457,7 @@ class _$StreamDao extends StreamDao {
   Stream<List<StreamEntity>> findAllAsStream() {
     return _queryAdapter.queryListStream('SELECT * FROM Stream',
         mapper: (Map<String, Object?> row) => StreamEntity(
-            row['uid'] as int,
+            row['uid'] as String,
             row['url'] as String,
             row['tile'] as String,
             row['streamType'] as String,
@@ -475,7 +475,7 @@ class _$StreamDao extends StreamDao {
   Stream<StreamEntity?> findByIdAsStream(int id) {
     return _queryAdapter.queryStream('SELECT * FROM Stream WHERE uid = ?1',
         mapper: (Map<String, Object?> row) => StreamEntity(
-            row['uid'] as int,
+            row['uid'] as String,
             row['url'] as String,
             row['tile'] as String,
             row['streamType'] as String,
@@ -494,7 +494,7 @@ class _$StreamDao extends StreamDao {
   Future<StreamEntity?> findById(int id) async {
     return _queryAdapter.query('SELECT * FROM Stream WHERE uid = ?1',
         mapper: (Map<String, Object?> row) => StreamEntity(
-            row['uid'] as int,
+            row['uid'] as String,
             row['url'] as String,
             row['tile'] as String,
             row['streamType'] as String,
@@ -511,7 +511,7 @@ class _$StreamDao extends StreamDao {
   Future<List<StreamEntity>> findAll() async {
     return _queryAdapter.queryList('SELECT * FROM Stream',
         mapper: (Map<String, Object?> row) => StreamEntity(
-            row['uid'] as int,
+            row['uid'] as String,
             row['url'] as String,
             row['tile'] as String,
             row['streamType'] as String,
@@ -1052,10 +1052,11 @@ class _$PlayListDetailsDao extends PlayListDetailsDao {
   }
 
   @override
-  Future<List<StreamStateEntity>> getStreamFromPlayList(int playListId) async {
+  Future<List<PlaylistDetailEntity>> getStreamFromPlayList(
+      int playListId) async {
     return _queryAdapter.queryList(
-        'SELECT pl.*,st.* FROM Playlist pl INNER JOIN  PlaylistDetail dt on pl.id = dt.playlistId INNER JOIN Stream st ON st.uid = dt.streamId INNER JOIN StreamState sst ON st.uid = sst.streamId WHERE pl.id = ?1 ORDER BY dt.joinIndex ASC',
-        mapper: (Map<String, Object?> row) => StreamStateEntity(row['streamId'] as int, row['progressTime'] as int),
+        'SELECT pl.*,st.*,sst.* FROM Playlist pl INNER JOIN PlaylistDetail dt ON pl.id = dt.playlistId INNER JOIN Stream st ON st.uid = dt.streamId INNER JOIN StreamState sst ON st.uid = sst.streamId WHERE pl.id = ?1 ORDER BY dt.joinIndex ASC',
+        mapper: (Map<String, Object?> row) => PlaylistDetailEntity(playlistId: row['playlistId'] as int, streamId: row['streamId'] as String, joinIndex: row['joinIndex'] as int),
         arguments: [playListId]);
   }
 
@@ -1065,13 +1066,13 @@ class _$PlayListDetailsDao extends PlayListDetailsDao {
         'SELECT * FROM PlaylistDetail p WHERE p.playlistId = ?1',
         mapper: (Map<String, Object?> row) => PlaylistDetailEntity(
             playlistId: row['playlistId'] as int,
-            streamId: row['streamId'] as int,
+            streamId: row['streamId'] as String,
             joinIndex: row['joinIndex'] as int),
         arguments: [playListId]);
   }
 
   @override
-  Future<void> deleteStreamFromPlayList(int playListId, int streamId) async {
+  Future<void> deleteStreamFromPlayList(int playListId, String streamId) async {
     await _queryAdapter.queryNoReturn(
         'DELETE FROM PlaylistDetail WHERE PlaylistDetail.playlistId = ?1 AND PlaylistDetail.streamId = ?2',
         arguments: [playListId, streamId]);
@@ -1087,7 +1088,7 @@ class _$PlayListDetailsDao extends PlayListDetailsDao {
     return _queryAdapter.queryList('SELECT * FROM PlaylistDetail',
         mapper: (Map<String, Object?> row) => PlaylistDetailEntity(
             playlistId: row['playlistId'] as int,
-            streamId: row['streamId'] as int,
+            streamId: row['streamId'] as String,
             joinIndex: row['joinIndex'] as int));
   }
 
@@ -1096,7 +1097,7 @@ class _$PlayListDetailsDao extends PlayListDetailsDao {
     return _queryAdapter.queryListStream('SELECT * FROM PlaylistDetail',
         mapper: (Map<String, Object?> row) => PlaylistDetailEntity(
             playlistId: row['playlistId'] as int,
-            streamId: row['streamId'] as int,
+            streamId: row['streamId'] as String,
             joinIndex: row['joinIndex'] as int),
         queryableName: 'PlaylistDetail',
         isView: false);

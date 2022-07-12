@@ -12,7 +12,7 @@ import 'package:db_new_pie_project/database/dao/history/history_dao.dart';
 import 'package:db_new_pie_project/database/dao/history/histoty_manager.dart';
 import 'package:db_new_pie_project/database/dao/playlist/play_list_dao.dart';
 import 'package:db_new_pie_project/database/dao/playlist/play_list_details_dao.dart';
-import 'package:db_new_pie_project/database/dao/playlist/play_list_manager.dart';
+import 'package:db_new_pie_project/database/manager/play_list_manager.dart';
 import 'package:db_new_pie_project/database/dao/stream/stream_dao.dart';
 import 'package:db_new_pie_project/database/dao/stream/stream_manager.dart';
 import 'package:db_new_pie_project/database/entities/entities.dart';
@@ -42,7 +42,7 @@ void main() {
   Future<void> addStream(StreamDao dao, int count) async {
     for (int i = 0; i < count; i++) {
       await dao.insertStream(StreamEntity(
-          i + 1,
+          "${i + 1}",
           "https://test.com${(i + 1)}",
           "tile",
           "streamType",
@@ -73,7 +73,7 @@ void main() {
     });
 
     await addStream(db.streamDao, 1);
-    await playListManager.createPlaylist("playList1", 1);
+    await playListManager.createPlaylist("playList1", "1");
 
     await Future.delayed(Duration(milliseconds: 500));
 
@@ -87,10 +87,10 @@ void main() {
     PlayListManager playListManager = PlayListManager(db);
 
     await addStream(db.streamDao, 4);
-    await playListManager.createPlaylist("playList1", 1);
+    await playListManager.createPlaylist("playList1", "1");
 
-    await playListManager.addStreamToPlayList(1, 2);
-    await playListManager.addStreamToPlayList(1, 3);
+    await playListManager.addStreamToPlayList(1, "2");
+    await playListManager.addStreamToPlayList(1, "3");
 
     var playListDetail = await playListManager.findAllPlayListDetail();
 
@@ -104,31 +104,31 @@ void main() {
     PlayListManager playListManager = PlayListManager(db);
 
     List<PlaylistEntity> latestPlayList = List.empty();
-    List<PlayListData> latestStreams = List.empty();
+    List<StreamData> latestStreams = List.empty();
 
     playListManager.findAllPlayListAsStream().listen((data) {
       latestPlayList = data;
     });
 
     await addStream(db.streamDao, 4);
-    await playListManager.createPlaylist("playList1", 1);
+    await playListManager.createPlaylist("playList1", "1");
 
     playListManager.getListStreamFromPlayList(1).listen((data) {
       latestStreams = data;
     });
 
-    await Future.delayed(Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 500));
     expect(latestPlayList.length, 1);
     expect(latestStreams.length, 1);
-    expect(latestStreams[0].playlistDetailEntity.playlistId, latestPlayList[0].id);
+    expect(latestStreams[0].streamEntity.uid, "1");
 
-    await playListManager.addStreamToPlayList(latestPlayList[0].id, 2);
-    await Future.delayed(Duration(milliseconds: 500));
+    await playListManager.addStreamToPlayList(latestPlayList[0].id, "2");
+    await Future.delayed(const Duration(milliseconds: 500));
 
     //var a = await playListManager.getStreamData(latestPlayList[0].id);
     expect(latestStreams.length, 2);
-    expect(latestStreams[0].streamEntity.uid, 1);
-    expect(latestStreams[1].streamEntity.uid, 2);
+    expect(latestStreams[0].streamEntity.uid, "1");
+    expect(latestStreams[1].streamEntity.uid, "2");
   });
 
   test('test updateNamePlayList', () async {
@@ -139,9 +139,9 @@ void main() {
 
     addStream(db.streamDao, 3);
 
-    await playListManager.createPlaylist("hello", 1);
-    await playListManager.createPlaylist("playList2", 2);
-    await playListManager.createPlaylist("playList3", 2);
+    await playListManager.createPlaylist("hello", "1");
+    await playListManager.createPlaylist("playList2", "2");
+    await playListManager.createPlaylist("playList3", "2");
 
     await playListManager.updateNamePlayList("newName", 1);
 
@@ -157,17 +157,17 @@ void main() {
     PlayListManager playListManager = PlayListManager(db);
 
     await addStream(db.streamDao, 4);
-    await playListManager.createPlaylist("playList1", 1);
+    await playListManager.createPlaylist("playList1", "1");
 
-    await playListManager.addStreamToPlayList(1, 2);
-    await playListManager.addStreamToPlayList(1, 3);
+    await playListManager.addStreamToPlayList(1, "2");
+    await playListManager.addStreamToPlayList(1, "3");
 
-    await playListManager.removeStreamFromPLayList(1, 1);
+    await playListManager.removeStreamFromPLayList(1, "1");
     var list = await playListManager.getStreamData(1);
 
     expect(list.length, 2);
-    expect(list[0].streamEntity.uid, 2);
-    expect(list[1].streamEntity.uid, 3);
+    expect(list[0].streamEntity.uid, "2");
+    expect(list[1].streamEntity.uid, "3");
   });
 
   test('test changeProgressTime', () async {
@@ -176,18 +176,18 @@ void main() {
     PlayListManager playListManager = PlayListManager(db);
 
     await addStream(db.streamDao, 4);
-    await playListManager.createPlaylist("playList1", 1);
+    await playListManager.createPlaylist("playList1", "1");
 
-    await playListManager.addStreamToPlayList(1, 2);
-    await playListManager.addStreamToPlayList(1, 3);
+    await playListManager.addStreamToPlayList(1, "2");
+    await playListManager.addStreamToPlayList(1, "3");
 
-    await db.historyDao.updateStreamStateEntity(StreamStateEntity(2, 234));
-    await db.historyDao.updateStreamStateEntity(StreamStateEntity(3, 9999));
+    await db.historyDao.updateStreamStateEntity(StreamStateEntity("2", 234));
+    await db.historyDao.updateStreamStateEntity(StreamStateEntity("3", 9999));
     var list = await playListManager.getStreamData(1);
 
-    expect(list[0].streamStateEntity.progressTime, 0);
-    expect(list[1].streamStateEntity.progressTime, 234);
-    expect(list[2].streamStateEntity.progressTime, 9999);
+    expect(list[0].processTime, 0);
+    expect(list[1].processTime, 234);
+    expect(list[2].processTime, 9999);
   });
 
   test('test deletePlayList', () async {
@@ -196,8 +196,8 @@ void main() {
     PlayListManager playListManager = PlayListManager(db);
 
     await addStream(db.streamDao, 3);
-    await playListManager.createPlaylist("playList1", 1);
-    await playListManager.createPlaylist("playList2", 2);
+    await playListManager.createPlaylist("playList1", "1");
+    await playListManager.createPlaylist("playList2", "2");
 
     await playListManager.deletePlayList(1);
 
@@ -206,7 +206,7 @@ void main() {
 
     expect(playListData.length, 1);
     expect(playListDetail.length, 1);
-    expect(playListDetail[0].streamId, 2);
+    expect(playListDetail[0].streamId, "2");
   });
 
   test('test reOderListStream', () async {
@@ -215,19 +215,18 @@ void main() {
     PlayListManager playListManager = PlayListManager(db);
 
     await addStream(db.streamDao, 3);
-    await playListManager.createPlaylist("playList1", 1);
+    await playListManager.createPlaylist("playList1", "1");
 
-    await playListManager.addStreamToPlayList(1, 2);
-    await playListManager.addStreamToPlayList(1, 3);
+    await playListManager.addStreamToPlayList(1, "2");
+    await playListManager.addStreamToPlayList(1, "3");
     var data = await playListManager.getStreamData(1);
-    data.reversed;
 
-    await playListManager.reOderListStream(data);
+    await playListManager.reOderListStream(1, data.reversed.toList());
 
     await Future.delayed(const Duration(milliseconds: 500));
 
     var list = await playListManager.getStreamData(1);
 
-    expect(list[0].playlistDetailEntity, 3);
+    expect(list[0].streamEntity.uid, "3");
   });
 }

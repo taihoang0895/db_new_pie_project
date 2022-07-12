@@ -3,10 +3,10 @@ import 'package:db_new_pie_project/database/entities/playlist/play_list_detail_e
 
 import '../stream/stream_entity.dart';
 
-class PlayListData {
-  PlaylistDetailEntity playlistDetailEntity;
+class StreamData {
   StreamEntity streamEntity;
-  StreamStateEntity streamStateEntity;
+  int processTime ;
+  int joinIndex;
 
-  PlayListData(this.playlistDetailEntity, this.streamEntity, this.streamStateEntity);
+  StreamData(this.streamEntity, this.processTime, this.joinIndex);
 }
