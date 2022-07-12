@@ -7,7 +7,6 @@
 
 import 'package:db_new_pie_project/database/app_database.dart';
 import 'package:db_new_pie_project/database/dao/stream/stream_history.dart';
-import 'package:db_new_pie_project/database/dao/stream/stream_manager.dart';
 import 'package:db_new_pie_project/database/entities/history/stream_history_entity.dart';
 import 'package:db_new_pie_project/database/entities/history/stream_state_entity.dart';
 import 'package:db_new_pie_project/database/entities/stream/stream_entity.dart';
@@ -20,7 +19,9 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:db_new_pie_project/main.dart';
 
-import 'stream_manager_test.dart';
+StreamEntity fakeStreamEntity(int id){
+  return StreamEntity(id.toString(), "url_$id", "title_$id", StreamType.VIDEO_STREAM.name, 10000, "uploader_$id", "uploaderUrl_$id", 0, "textualUploadDate_$id", DateTime.now().millisecondsSinceEpoch);
+}
 
 void main() {
   Future<AppDatabase> init() async {
@@ -37,10 +38,9 @@ void main() {
   test('Save a Stream History', () async {
     AppDatabase database = await init();
     HistoryManager historyManager = HistoryManager(database);
-    StreamManager streamManager = new StreamManager(database);
     StreamEntity streamEntity1 = fakeStreamEntity(1);
     StreamEntity streamEntity2 = fakeStreamEntity(2);
-    streamManager.insertEntities([streamEntity1, streamEntity2]);
+    database.streamDao.insertStreams([streamEntity1, streamEntity2]);
 
     await historyManager.save(streamEntity1.uid);
     List<StreamHistoryEntity> records =
@@ -64,10 +64,9 @@ void main() {
   test('Delete a Stream History', () async {
     AppDatabase database = await init();
     HistoryManager historyManager = HistoryManager(database);
-    StreamManager streamManager = new StreamManager(database);
     StreamEntity streamEntity1 = fakeStreamEntity(1);
     StreamEntity streamEntity2 = fakeStreamEntity(2);
-    streamManager.insertEntities([streamEntity1, streamEntity2]);
+    database.streamDao.insertStreams([streamEntity1, streamEntity2]);
 
     List<StreamHistoryEntity> latest = List.empty();
 
@@ -86,10 +85,9 @@ void main() {
   test('Clear a Stream History', () async {
     AppDatabase database = await init();
     HistoryManager historyManager = HistoryManager(database);
-    StreamManager streamManager = new StreamManager(database);
     StreamEntity streamEntity1 = fakeStreamEntity(1);
     StreamEntity streamEntity2 = fakeStreamEntity(2);
-    streamManager.insertEntities([streamEntity1, streamEntity2]);
+    database.streamDao.insertStreams([streamEntity1, streamEntity2]);
 
     List<StreamHistoryEntity> latest = List.empty();
 
@@ -109,10 +107,9 @@ void main() {
   test('Update Progress Time', () async {
     AppDatabase database = await init();
     HistoryManager historyManager = HistoryManager(database);
-    StreamManager streamManager = new StreamManager(database);
     StreamEntity streamEntity1 = fakeStreamEntity(1);
     StreamEntity streamEntity2 = fakeStreamEntity(2);
-    streamManager.insertEntities([streamEntity1, streamEntity2]);
+    database.streamDao.insertStreams([streamEntity1, streamEntity2]);
 
     await historyManager.updateProgressTime(streamEntity1.uid, 5000);
     StreamStateEntity? streamState =
@@ -131,10 +128,9 @@ void main() {
   test('Increase View Count', () async {
     AppDatabase database = await init();
     HistoryManager historyManager = HistoryManager(database);
-    StreamManager streamManager = new StreamManager(database);
     StreamEntity streamEntity1 = fakeStreamEntity(1);
     StreamEntity streamEntity2 = fakeStreamEntity(2);
-    streamManager.insertEntities([streamEntity1, streamEntity2]);
+    database.streamDao.insertStreams([streamEntity1, streamEntity2]);
 
     List<StreamHistoryEntity> latest = List.empty();
 
@@ -167,10 +163,9 @@ void main() {
   test('Find Stream History As Stream', () async {
     AppDatabase database = await init();
     HistoryManager historyManager = HistoryManager(database);
-    StreamManager streamManager = new StreamManager(database);
     StreamEntity streamEntity1 = fakeStreamEntity(1);
     StreamEntity streamEntity2 = fakeStreamEntity(2);
-    streamManager.insertEntities([streamEntity1, streamEntity2]);
+    database.streamDao.insertStreams([streamEntity1, streamEntity2]);
 
     List<StreamHistory> latest = List.empty();
 

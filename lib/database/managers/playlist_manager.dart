@@ -152,7 +152,7 @@ class PlayListManager {
     return _getStreamDataFromPlayList(playListId);
   }
 
-  Future<void> reOderListStream(int playlistId, List<StreamData> items) async {
+  Future<void> reorderListStream(int playlistId, List<StreamData> items) async {
     await detailsDao.clearDetails();
 
     for (StreamData item in items) {

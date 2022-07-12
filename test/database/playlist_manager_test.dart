@@ -12,9 +12,8 @@ import 'package:db_new_pie_project/database/dao/history/history_dao.dart';
 import 'package:db_new_pie_project/database/managers/history_manager.dart';
 import 'package:db_new_pie_project/database/dao/playlist/play_list_dao.dart';
 import 'package:db_new_pie_project/database/dao/playlist/play_list_details_dao.dart';
-import 'package:db_new_pie_project/database/managers/play_list_manager.dart';
+import 'package:db_new_pie_project/database/managers/playlist_manager.dart';
 import 'package:db_new_pie_project/database/dao/stream/stream_dao.dart';
-import 'package:db_new_pie_project/database/dao/stream/stream_manager.dart';
 import 'package:db_new_pie_project/database/entities/entities.dart';
 import 'package:db_new_pie_project/database/entities/playlist/play_list_data.dart';
 import 'package:db_new_pie_project/database/entities/playlist/play_list_entity.dart';
@@ -223,7 +222,7 @@ void main() {
     await playListManager.addStreamToPlayList(1, "3");
     var data = await playListManager.getStreamData(1);
 
-    await playListManager.reOderListStream(1, data.reversed.toList());
+    await playListManager.reorderListStream(1, data.reversed.toList());
 
     await Future.delayed(const Duration(milliseconds: 500));
 
