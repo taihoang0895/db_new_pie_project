@@ -10,25 +10,32 @@ class SearchHistoryManager {
 
   Future<void> onSearched(String text) {
     final SearchHistoryDao searchHistoryDao = _appDatabase.historyDao;
+    SearchHistoryEntity entity = SearchHistoryEntity(
+        null, text, DateTime.now().millisecondsSinceEpoch);
+    return searchHistoryDao.insertSearchHistory(entity);
 
-    return searchHistoryDao.firstOrNull(text).then((record) {
-      if (record == null) {
-        SearchHistoryEntity entity = SearchHistoryEntity(
-            null, text, DateTime.now().millisecondsSinceEpoch);
-        searchHistoryDao.insertSearchHistory(entity);
-      } else {
-        record.creationDate = DateTime.now().millisecondsSinceEpoch;
-        searchHistoryDao.updateSearchHistory(record);
-      }
-    });
+    // return searchHistoryDao.firstOrNull(text).then(
+    //   (record) {
+    //     if (record == null) {
+    //       SearchHistoryEntity entity = SearchHistoryEntity(
+    //           null, text, DateTime.now().millisecondsSinceEpoch);
+    //       searchHistoryDao.insertSearchHistory(entity);
+    //     } else {
+    //       record.creationDate = DateTime.now().millisecondsSinceEpoch;
+    //       searchHistoryDao.updateSearchHistory(record);
+    //     }
+    //   },
+    // );
   }
 
   Future<void> delete(int id) {
     final SearchHistoryDao searchHistoryDao = _appDatabase.historyDao;
-    return searchHistoryDao.deleteSearchHistory(id).then((value) => _appDatabase.notifyTableChanged(SearchHistoryEntity.tableName));
+    return searchHistoryDao.deleteSearchHistory(id).then((value) =>
+        _appDatabase.notifyTableChanged(SearchHistoryEntity.tableName));
   }
 
-  Stream<List<SearchHistoryEntity>> findSimilarText(String text, {int limit=30}) {
+  Future<List<SearchHistoryEntity>> findSimilarText(String text,
+      {int limit = 30}) {
     if (text.trim().isEmpty) {
       return _appDatabase.historyDao.findAllAsStream();
     } else {
@@ -39,7 +46,8 @@ class SearchHistoryManager {
 
   Future<void> clear() {
     final SearchHistoryDao searchHistoryDao = _appDatabase.historyDao;
-    return searchHistoryDao.clearSearchHistory().then((value) => _appDatabase.notifyTableChanged(SearchHistoryEntity.tableName));
+    return searchHistoryDao.clearSearchHistory().then((value) =>
+        _appDatabase.notifyTableChanged(SearchHistoryEntity.tableName));
   }
 
   Future<List<SearchHistoryEntity>> findAll() {

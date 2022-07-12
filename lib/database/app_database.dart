@@ -18,6 +18,7 @@ import 'entities/subscription/subscription_entity.dart';
 import 'entities/subscription/subscription_group_entity.dart';
 part 'app_database.g.dart';
 
+
 @Database(version: 1, entities: [SearchHistoryEntity, StreamEntity, StreamHistoryEntity, StreamStateEntity, SubscriptionEntity, SubscriptionGroupEntity, SubscriptionDetailEntity, PlaylistEntity,PlaylistDetailEntity])
 abstract class AppDatabase extends FloorDatabase {
   SearchHistoryDao get historyDao;

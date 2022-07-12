@@ -16,6 +16,9 @@ abstract class PlayListDetailsDao {
   @delete
   Future<int> deletePlayListDetail(PlaylistDetailEntity detailEntity);
 
+  @Query("DELETE FROM $playListDetailTableName WHERE PlaylistDetail.playlistId = :playListId")
+  Future<void> deletePlayListDetailById(int playListId);
+
 
   @Query(  'SELECT pl.*,st.* FROM ${PlaylistEntity.tableName} pl INNER JOIN  ${PlaylistDetailEntity.tableName} dt on pl.id = dt.playlistId INNER JOIN ${StreamEntity.tableName} st ON st.uid = dt.streamId INNER JOIN ${StreamStateEntity.tableName} sst ON st.uid = sst.streamId WHERE pl.id = :playListId ORDER BY dt.joinIndex ASC')
   Future<List<StreamStateEntity>> getStreamFromPlayList(int playListId);

@@ -22,6 +22,9 @@ abstract class StreamDao{
   @Query('SELECT * FROM ${StreamEntity.tableName} WHERE uid = :id')
   Stream<StreamEntity?> findByIdAsStream(int id);
 
+  @Query('SELECT * FROM ${StreamEntity.tableName} WHERE uid = :id')
+  Future<StreamEntity?> findById(int id);
+
   @Query('SELECT * FROM ${StreamEntity.tableName}')
   Future<List<StreamEntity>> findAll();
 

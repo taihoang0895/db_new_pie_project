@@ -10,11 +10,12 @@ class HistoryManager {
   final AppDatabase _appDatabase;
   final QueryAdapter _queryAdapter;
 
+  HistoryManager(this._appDatabase)
+      : _queryAdapter = _appDatabase.buildQueryAdapter();
 
-  HistoryManager(this._appDatabase) : _queryAdapter = _appDatabase.buildQueryAdapter();
-
-  Stream<List<StreamHistory>> findAllStreamHistoryAsStream(){
-    String sql = 'SELECT * FROM (SELECT ${StreamHistoryEntity.tableName}.*, ${StreamEntity.tableName}.* FROM ${StreamHistoryEntity.tableName} INNER JOIN ${StreamEntity.tableName} ON ${StreamHistoryEntity.tableName}.streamId = ${StreamEntity.tableName}.uid) as stream_records'
+  Stream<List<StreamHistory>> findAllStreamHistoryAsStream() {
+    String sql =
+        'SELECT * FROM (SELECT ${StreamHistoryEntity.tableName}.*, ${StreamEntity.tableName}.* FROM ${StreamHistoryEntity.tableName} INNER JOIN ${StreamEntity.tableName} ON ${StreamHistoryEntity.tableName}.streamId = ${StreamEntity.tableName}.uid) as stream_records'
         ' INNER JOIN ${StreamStateEntity.tableName} ON ${StreamStateEntity.tableName}.streamId = stream_records.streamId ORDER BY stream_records.accessDate DESC';
 
     return _queryAdapter.queryListStream(sql,
@@ -36,11 +37,13 @@ class HistoryManager {
               row['viewCount'] as int,
               row['textualUploadDate'] as String,
               row['uploadDate'] as int,
-            )
-
-        ),
+            )),
         queryableName: StreamHistoryEntity.tableName,
         isView: false);
+  }
+
+  Stream<List<StreamHistoryEntity>> findAllHistoryEntitiesAsStream() {
+    return _appDatabase.historyDao.findAllStreamHistoryEntitiesAsStream();
   }
 
   Future<List<StreamHistoryEntity>> findAllHistoryEntities() {
@@ -48,57 +51,79 @@ class HistoryManager {
   }
 
   Future<void> delete(int id) {
-    return _appDatabase.historyDao.deleteStreamHistory(id).then((value) => _appDatabase.notifyTableChanged(StreamHistoryEntity.tableName));
+    return _appDatabase.historyDao.deleteStreamHistory(id).then(
+          (_) => _appDatabase.notifyTableChanged(StreamHistoryEntity.tableName),
+        );
+  }
+
+  Future<int?> getProgressTime(String id) {
+    // return history progress time with id
+    throw Error();
   }
 
   Future<void> clear() {
-    return _appDatabase.historyDao.clearStreamHistory().then((value) => _appDatabase.notifyTableChanged(StreamHistoryEntity.tableName));
-  }
-
-  Stream<List<StreamHistoryEntity>> findAllHistoryEntitiesAsStream() {
-    return _appDatabase.historyDao.findAllStreamHistoryEntitiesAsStream();
+    return _appDatabase.historyDao.clearStreamHistory().then(
+        (_) => _appDatabase.notifyTableChanged(StreamHistoryEntity.tableName));
   }
 
   Future<void> save(int streamId) {
-    return _appDatabase.historyDao
-        .firstOrNullStreamHistory(streamId)
-        .then((streamHistory) {
-      if (streamHistory == null) {
-        _appDatabase.historyDao.insertStreamHistory(StreamHistoryEntity(
-            streamId, DateTime.now().millisecondsSinceEpoch, 0)).then((value){
-          _appDatabase.historyDao.insertStreamStateEntity(StreamStateEntity(streamId, 0));
-        });
-      } else {
-        streamHistory.accessDate = DateTime.now().millisecondsSinceEpoch;
-        _appDatabase.historyDao.updateStreamHistory(streamHistory);
-      }
-    });
+    return _appDatabase.historyDao.firstOrNullStreamHistory(streamId).then(
+      (streamHistory) {
+        if (streamHistory == null) {
+          _appDatabase.historyDao
+              .insertStreamHistory(
+            StreamHistoryEntity(
+              streamId,
+              DateTime.now().millisecondsSinceEpoch,
+              0,
+            ),
+          )
+              .then((value) {
+            _appDatabase.historyDao.insertStreamStateEntity(
+              StreamStateEntity(streamId, 0),
+            );
+          });
+        } else {
+          streamHistory.accessDate = DateTime.now().millisecondsSinceEpoch;
+          _appDatabase.historyDao.updateStreamHistory(streamHistory);
+        }
+      },
+    );
   }
 
   Future<void> updateProgressTime(int streamId, int time) {
-    return _appDatabase.historyDao.firstOrNullStreamState(streamId).then((entity){
-        if(entity == null){
-          _appDatabase.historyDao.insertStreamStateEntity(StreamStateEntity(streamId, time));
-        }else{
-          entity.progressTime = time;
-          _appDatabase.historyDao.updateStreamStateEntity(entity);
-        }
-    }).then((value) => _appDatabase.notifyTableChanged(StreamHistoryEntity.tableName));
+    return _appDatabase.historyDao
+        .firstOrNullStreamState(streamId)
+        .then((entity) {
+      if (entity == null) {
+        _appDatabase.historyDao
+            .insertStreamStateEntity(StreamStateEntity(streamId, time));
+      } else {
+        entity.progressTime = time;
+        _appDatabase.historyDao.updateStreamStateEntity(entity);
+      }
+    }).then((value) =>
+            _appDatabase.notifyTableChanged(StreamHistoryEntity.tableName));
   }
 
-  Future<StreamStateEntity?> firstOrNullStreamState(int streamId){
+  Future<StreamStateEntity?> firstOrNullStreamState(int streamId) {
     return _appDatabase.historyDao.firstOrNullStreamState(streamId);
   }
 
   Future<void> increaseViewCount(int streamId) {
-    return _appDatabase.historyDao.firstOrNullStreamHistory(streamId).then((entity){
-        if(entity == null){
-          _appDatabase.historyDao.insertStreamHistory(StreamHistoryEntity(streamId, DateTime.now().millisecondsSinceEpoch, 1));
-        }else{
+    return _appDatabase.historyDao.firstOrNullStreamHistory(streamId).then(
+      (entity) {
+        if (entity == null) {
+          _appDatabase.historyDao.insertStreamHistory(
+            StreamHistoryEntity(
+                streamId, DateTime.now().millisecondsSinceEpoch, 1),
+          );
+        } else {
           entity.repeatCount += 1;
           entity.accessDate = DateTime.now().millisecondsSinceEpoch;
           _appDatabase.historyDao.updateStreamHistory(entity);
         }
-    });
+      },
+    );
   }
 }

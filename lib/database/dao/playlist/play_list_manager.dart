@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:db_new_pie_project/database/dao/stream/stream_dao.dart';
 import 'package:db_new_pie_project/database/entities/entities.dart';
 import 'package:floor/floor.dart';
 
@@ -8,6 +9,7 @@ import '../../entities/playlist/play_list_data.dart';
 import '../../entities/playlist/play_list_entity.dart';
 import '../../entities/playlist/play_list_detail_entity.dart';
 import '../../entities/stream/stream_entity.dart';
+import '../history/history_dao.dart';
 import 'play_list_dao.dart';
 import 'play_list_details_dao.dart';
 
@@ -22,6 +24,10 @@ class PlayListManager {
 
   PlayListDetailsDao get detailsDao => appDatabase.detailsDao;
 
+  StreamDao get streamDao => appDatabase.streamDao;
+
+  SearchHistoryDao get historyDao => appDatabase.historyDao;
+
   String sqlQueryStreams =
       'SELECT pl.*,st.*,sst.* FROM ${PlaylistEntity.tableName} pl '
       'INNER JOIN  ${PlaylistDetailEntity.tableName} dt on pl.id = dt.playlistId '
@@ -32,7 +38,10 @@ class PlayListManager {
   Stream<List<PlayListData>> _getStreamDataFromPlayList(int playListId) {
     return _queryAdapter.queryListStream(sqlQueryStreams,
         mapper: (Map<String, Object?> row) => PlayListData(
-              PlaylistEntity(row['id'] as int, row['name'] as String),
+              PlaylistDetailEntity(
+                  playlistId: row['playlistId'] as int,
+                  streamId: row['streamId'] as int,
+                  joinIndex: row['joinIndex'] as int),
               StreamEntity(
                   row['uid'] as int,
                   row['url'] as String,
@@ -48,7 +57,7 @@ class PlayListManager {
                   row['streamId'] as int, row['progressTime'] as int),
             ),
         arguments: [playListId],
-        queryableName: 'PlayListData',
+        queryableName: PlaylistDetailEntity.tableName,
         isView: false);
   }
 
@@ -56,7 +65,10 @@ class PlayListManager {
   Future<List<PlayListData>> getStreamData(int playListId) {
     return _queryAdapter.queryList(sqlQueryStreams,
         mapper: (Map<String, Object?> row) => PlayListData(
-            PlaylistEntity(row['id'] as int, row['name'] as String),
+            PlaylistDetailEntity(
+                playlistId: row['playlistId'] as int,
+                streamId: row['streamId'] as int,
+                joinIndex: row['joinIndex'] as int),
             StreamEntity(
                 row['uid'] as int,
                 row['url'] as String,
@@ -73,25 +85,51 @@ class PlayListManager {
         arguments: [playListId]);
   }
 
-  Future<void> addStreamToPlayList(int playId, int streamId) async {
-    var data = await getStreamData(playId);
+  Future<void> createPlaylist(String name, int streamId) async {
+    var playListAll = await playListDao.findAll();
+
+    var streamState = await historyDao.firstOrNullStreamState(streamId);
+    if (streamState == null) {
+      await historyDao.insertStreamStateEntity(StreamStateEntity(streamId, 0));
+    }
+
+    var lateId = 0;
+    for (var element in playListAll) {
+      if (lateId <= element.id) {
+        lateId = element.id;
+      }
+    }
+    var detailsAll = await detailsDao.findAll();
+
+    PlaylistEntity entity = PlaylistEntity(lateId + 1, name);
+    await playListDao.addPlaylist(entity);
 
     await detailsDao.addPlaylistDetail(PlaylistDetailEntity(
-        playlistId: playId, streamId: streamId, joinIndex: data.length + 1));
+        playlistId: entity.id,
+        streamId: streamId,
+        joinIndex: _findMaxIndex(detailsAll) + 1));
   }
 
-  Future<void> createPlaylist(
-      PlaylistEntity playlistEntity, int streamId) async {
-    playListDao.addPlaylist(playlistEntity);
+  Future<void> addStreamToPlayList(int playId, int streamId) async {
+    var data = await detailsDao.findAll();
 
-    detailsDao.addPlaylistDetail(PlaylistDetailEntity(
-        playlistId: playlistEntity.id,
+    var streamState = await historyDao.firstOrNullStreamState(streamId);
+    if (streamState == null) {
+      await historyDao.insertStreamStateEntity(StreamStateEntity(streamId, 0));
+    }
+
+    await detailsDao.addPlaylistDetail(PlaylistDetailEntity(
+        playlistId: playId,
         streamId: streamId,
-        joinIndex: PlaylistDetailEntity.defaultJoinIndex));
+        joinIndex: _findMaxIndex(data) + 1));
   }
 
   Future<void> deletePlayList(int playListId) async {
-    await playListDao.deletePlayListByID(playListId);
+    await playListDao.deletePlayListByID(playListId).then(
+        (value) => appDatabase.notifyTableChanged(PlaylistEntity.tableName));
+
+    await detailsDao.deletePlayListDetailById(playListId).then((value) =>
+        appDatabase.notifyTableChanged(PlaylistDetailEntity.tableName));
   }
 
   Stream<List<PlaylistEntity>> findAllPlayListAsStream() {
@@ -102,7 +140,6 @@ class PlayListManager {
     return playListDao.findAll();
   }
 
-
   Future<List<PlaylistDetailEntity>> findAllPlayListDetail() async {
     return detailsDao.findAll();
   }
@@ -111,15 +148,15 @@ class PlayListManager {
     return _getStreamDataFromPlayList(playListId);
   }
 
-  Future<void> reOderListStream(
-      int playListId, List<PlayListData> items) async {
-    items.asMap().forEach((key, value) {
-      detailsDao.updatePlayListDetail(PlaylistDetailEntity.clone(
-          PlaylistDetailEntity(
-              playlistId: playListId,
-              streamId: value.streamEntity.uid,
-              joinIndex: key)));
-    });
+  Future<void> reOderListStream(List<PlayListData> items) async {
+    for (PlayListData item in items) {
+      var detailItem = PlaylistDetailEntity.clone(PlaylistDetailEntity(
+          playlistId: item.playlistDetailEntity.playlistId,
+          streamId: item.streamEntity.uid,
+          joinIndex: items.indexOf(item)));
+
+      await detailsDao.updatePlayListDetail(detailItem);
+    }
   }
 
   Future<void> removeStreamFromPLayList(int playListId, int streamId) async {
@@ -128,5 +165,15 @@ class PlayListManager {
 
   Future<void> updateNamePlayList(String playListName, int playListId) async {
     await playListDao.renamePlayList(PlaylistEntity(playListId, playListName));
+  }
+
+  int _findMaxIndex(List<PlaylistDetailEntity> items) {
+    var max = 0;
+    for (var element in items) {
+      if (max <= element.joinIndex) {
+        max = element.joinIndex;
+      }
+    }
+    return max;
   }
 }

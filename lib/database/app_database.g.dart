@@ -491,6 +491,23 @@ class _$StreamDao extends StreamDao {
   }
 
   @override
+  Future<StreamEntity?> findById(int id) async {
+    return _queryAdapter.query('SELECT * FROM Stream WHERE uid = ?1',
+        mapper: (Map<String, Object?> row) => StreamEntity(
+            row['uid'] as int,
+            row['url'] as String,
+            row['tile'] as String,
+            row['streamType'] as String,
+            row['duration'] as int,
+            row['uploader'] as String,
+            row['uploaderUrl'] as String,
+            row['viewCount'] as int,
+            row['textualUploadDate'] as String,
+            row['uploadDate'] as int),
+        arguments: [id]);
+  }
+
+  @override
   Future<List<StreamEntity>> findAll() async {
     return _queryAdapter.queryList('SELECT * FROM Stream',
         mapper: (Map<String, Object?> row) => StreamEntity(
@@ -1026,6 +1043,13 @@ class _$PlayListDetailsDao extends PlayListDetailsDao {
 
   final DeletionAdapter<PlaylistDetailEntity>
       _playlistDetailEntityDeletionAdapter;
+
+  @override
+  Future<void> deletePlayListDetailById(int playListId) async {
+    await _queryAdapter.queryNoReturn(
+        'DELETE FROM PlaylistDetail WHERE PlaylistDetail.playlistId = ?1',
+        arguments: [playListId]);
+  }
 
   @override
   Future<List<StreamStateEntity>> getStreamFromPlayList(int playListId) async {

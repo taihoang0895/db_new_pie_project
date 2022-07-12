@@ -7,7 +7,7 @@ import 'package:db_new_pie_project/database/entities/history/search_history_enti
 
 @dao
 abstract class SearchHistoryDao{
-  @insert
+  @Insert(onConflict: OnConflictStrategy.replace)
   Future<void> insertSearchHistory(SearchHistoryEntity entity);
 
   @update
