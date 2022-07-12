@@ -6,6 +6,7 @@ import 'package:floor/floor.dart';
 import 'package:flutter/cupertino.dart';
 
 import '../app_database.dart';
+import '../dao/history/search_history_dao.dart';
 import '../entities/playlist/play_list_data.dart';
 import '../entities/playlist/play_list_entity.dart';
 import '../entities/playlist/play_list_detail_entity.dart';
@@ -25,9 +26,7 @@ class PlayListManager {
 
   PlayListDetailsDao get detailsDao => appDatabase.detailsDao;
 
-  StreamDao get streamDao => appDatabase.streamDao;
-
-  SearchHistoryDao get historyDao => appDatabase.historyDao;
+  HistoryDao get historyDao => appDatabase.historyDao;
 
   String sqlQueryStreams = """
       SELECT dt.*,

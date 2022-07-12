@@ -22,7 +22,7 @@ import 'package:db_new_pie_project/database/entities/playlist/play_list_detail_e
 import 'package:db_new_pie_project/database/entities/stream/stream_entity.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-/*
+
 
 void main() {
   Future<AppDatabase> init() async {
@@ -37,7 +37,8 @@ void main() {
     await db.playListDao.clearPLayList();
     await db.streamDao.clear();
     await db.detailsDao.clearDetails();
-    await db.historyDao.clearStreamHistory();
+    await db.historyDao.clear();
+    await db.historyDao.clearStreamState();
   }
 
   Future<void> addStream(StreamDao dao, int count) async {
@@ -182,8 +183,8 @@ void main() {
     await playListManager.addStreamToPlayList(1, "2");
     await playListManager.addStreamToPlayList(1, "3");
 
-    await db.historyDao.updateStreamStateEntity(StreamStateEntity("2", 234));
-    await db.historyDao.updateStreamStateEntity(StreamStateEntity("3", 9999));
+    await db.historyDao.insertStreamStateEntity(StreamStateEntity("2", 234));
+    await db.historyDao.insertStreamStateEntity(StreamStateEntity("3", 9999));
     var list = await playListManager.getStreamData(1);
 
     expect(list[0].processTime, 0);
@@ -231,4 +232,4 @@ void main() {
     expect(list[0].streamEntity.uid, "3");
   });
 }
-*/
+

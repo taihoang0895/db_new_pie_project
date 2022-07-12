@@ -78,9 +78,8 @@ void main() {
     expect(latest[0].search, "abc");
   });
 
-  test('Find Similar Text With Empty Text', () async {
+  test('2 Find Similar Text With Empty Text', () async {
     SearchHistoryManager searchHistoryManager = await init();
-
     await searchHistoryManager.onSearched("abc1");
     await searchHistoryManager.onSearched("abc2");
     await searchHistoryManager.onSearched("abc3");
