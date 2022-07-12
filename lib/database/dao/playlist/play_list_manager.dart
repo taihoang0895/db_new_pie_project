@@ -14,7 +14,7 @@ import 'play_list_dao.dart';
 import 'play_list_details_dao.dart';
 
 class PlayListManager {
-  final AppDatabase appDatabase;
+  /*final AppDatabase appDatabase;
   final QueryAdapter _queryAdapter;
 
   PlayListManager(this.appDatabase)
@@ -43,7 +43,7 @@ class PlayListManager {
                   streamId: row['streamId'] as int,
                   joinIndex: row['joinIndex'] as int),
               StreamEntity(
-                  row['uid'] as int,
+                  row['uid'] as String,
                   row['url'] as String,
                   row['tile'] as String,
                   row['streamType'] as String,
@@ -70,7 +70,7 @@ class PlayListManager {
                 streamId: row['streamId'] as int,
                 joinIndex: row['joinIndex'] as int),
             StreamEntity(
-                row['uid'] as int,
+                row['uid'] as String,
                 row['url'] as String,
                 row['tile'] as String,
                 row['streamType'] as String,
@@ -175,5 +175,5 @@ class PlayListManager {
       }
     }
     return max;
-  }
+  }*/
 }

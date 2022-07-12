@@ -12,7 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 StreamEntity fakeStreamEntity(int id){
-  return StreamEntity(id, "url_$id", "title_$id", StreamType.VIDEO_STREAM.name, 10000, "uploader_$id", "uploaderUrl_$id", 0, "textualUploadDate_$id", DateTime.now().millisecondsSinceEpoch);
+  return StreamEntity(id.toString(), "url_$id", "title_$id", StreamType.VIDEO_STREAM.name, 10000, "uploader_$id", "uploaderUrl_$id", 0, "textualUploadDate_$id", DateTime.now().millisecondsSinceEpoch);
 }
 
 void main() {

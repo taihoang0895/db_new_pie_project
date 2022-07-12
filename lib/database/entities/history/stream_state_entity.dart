@@ -3,10 +3,10 @@ import 'package:floor/floor.dart';
 @Entity(tableName: StreamStateEntity.tableName)
 class StreamStateEntity {
   @primaryKey
-  int streamId;
+  String streamId;
   int progressTime;
 
   StreamStateEntity(this.streamId, this.progressTime);
-  static const String tableName = "StreamState";
 
+  static const String tableName = "StreamState";
 }

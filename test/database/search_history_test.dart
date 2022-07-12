@@ -7,7 +7,7 @@
 
 import 'package:db_new_pie_project/database/app_database.dart';
 import 'package:db_new_pie_project/database/entities/history/search_history_entity.dart';
-import 'package:db_new_pie_project/database/dao/history/search_history_manager.dart';
+import 'package:db_new_pie_project/database/managers/search_history_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -52,7 +52,7 @@ void main() {
 
     await searchHistoryManager.onSearched("abc");
     List<SearchHistoryEntity> records = await searchHistoryManager.findAll();
-    searchHistoryManager.delete(records[0].id!);
+    searchHistoryManager.delete(records[0].search);
     records = await searchHistoryManager.findAll();
     expect(records.length, 0);
   });
@@ -61,22 +61,19 @@ void main() {
     SearchHistoryManager searchHistoryManager = await init();
 
     await searchHistoryManager.onSearched("abc");
-    List<SearchHistoryEntity> latest = List.empty();
-    searchHistoryManager.findSimilarText("a").listen((records) {
-      latest = records;
-    });
-    await Future.delayed(Duration(milliseconds: 500));
+
+    List<SearchHistoryEntity> latest = await searchHistoryManager.findSimilarText("a");
     expect(latest.length, 1);
     expect(latest[0].search, "abc");
 
     await searchHistoryManager.onSearched("acb");
-    await Future.delayed(Duration(milliseconds: 500));
+    latest = await searchHistoryManager.findSimilarText("a");
     expect(latest.length, 2);
     expect(latest[0].search, "acb");
     expect(latest[1].search, "abc");
 
-    await searchHistoryManager.delete(latest[0].id!);
-    await Future.delayed(Duration(milliseconds: 500));
+    await searchHistoryManager.delete(latest[0].search);
+    latest = await searchHistoryManager.findSimilarText("a");
     expect(latest.length, 1);
     expect(latest[0].search, "abc");
   });
@@ -88,15 +85,12 @@ void main() {
     await searchHistoryManager.onSearched("abc2");
     await searchHistoryManager.onSearched("abc3");
 
-    List<SearchHistoryEntity> latest = List.empty();
-    searchHistoryManager.findSimilarText("").listen((records) {
-      latest = records;
-    });
-    await Future.delayed(Duration(milliseconds: 500));
-    expect(latest.length, 3);
-    await searchHistoryManager.delete(latest[1].id!);
+    List<SearchHistoryEntity> latest = await searchHistoryManager.findSimilarText("");
 
-    await Future.delayed(Duration(milliseconds: 500));
+    expect(latest.length, 3);
+    await searchHistoryManager.delete(latest[1].search);
+
+    latest = await searchHistoryManager.findSimilarText("");
     expect(latest.length, 2);
     expect(latest[0].search, "abc3");
     expect(latest[1].search, "abc1");

@@ -12,8 +12,8 @@ import 'package:db_new_pie_project/database/entities/history/stream_history_enti
 import 'package:db_new_pie_project/database/entities/history/stream_state_entity.dart';
 import 'package:db_new_pie_project/database/entities/stream/stream_entity.dart';
 import 'package:db_new_pie_project/database/entities/history/search_history_entity.dart';
-import 'package:db_new_pie_project/database/dao/history/histoty_manager.dart';
-import 'package:db_new_pie_project/database/dao/history/search_history_manager.dart';
+import 'package:db_new_pie_project/database/managers/history_manager.dart';
+import 'package:db_new_pie_project/database/managers/search_history_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -23,13 +23,14 @@ import 'package:db_new_pie_project/main.dart';
 import 'stream_manager_test.dart';
 
 void main() {
-
   Future<AppDatabase> init() async {
     sqfliteFfiInit();
     AppDatabase database =
-    await $FloorAppDatabase.inMemoryDatabaseBuilder().build();
-    database.historyDao.clearSearchHistory();
+        await $FloorAppDatabase.inMemoryDatabaseBuilder().build();
+    database.searchHistoryDao.clearSearchHistory();
     database.streamDao.clear();
+    database.historyDao.clear();
+    database.historyDao.clearStreamState();
     return database;
   }
 
@@ -42,7 +43,8 @@ void main() {
     streamManager.insertEntities([streamEntity1, streamEntity2]);
 
     await historyManager.save(streamEntity1.uid);
-    List<StreamHistoryEntity> records = await historyManager.findAllHistoryEntities();
+    List<StreamHistoryEntity> records =
+        await historyManager.findAllHistoryEntities();
     expect(records.length, 1);
     expect(records[0].streamId, streamEntity1.uid);
 
@@ -113,12 +115,14 @@ void main() {
     streamManager.insertEntities([streamEntity1, streamEntity2]);
 
     await historyManager.updateProgressTime(streamEntity1.uid, 5000);
-    StreamStateEntity? streamState = await historyManager.firstOrNullStreamState(streamEntity1.uid);
+    StreamStateEntity? streamState =
+        await historyManager.firstOrNullStreamState(streamEntity1.uid);
     expect(streamState != null, true);
     expect(streamState!.progressTime, 5000);
 
     await historyManager.updateProgressTime(streamEntity1.uid, 10000);
-    streamState = await historyManager.firstOrNullStreamState(streamEntity1.uid);
+    streamState =
+        await historyManager.firstOrNullStreamState(streamEntity1.uid);
     expect(streamState != null, true);
     expect(streamState!.progressTime, 10000);
     // test notify to Stream History Table
@@ -170,15 +174,48 @@ void main() {
 
     List<StreamHistory> latest = List.empty();
 
-   await historyManager.save(streamEntity1.uid);
+    await historyManager.save(streamEntity1.uid);
 
-    historyManager.findAllStreamHistoryAsStream().listen((event) {
-       latest = event;
+    historyManager.findAllAsStream().listen((event) {
+      latest = event;
     });
 
     await Future.delayed(Duration(milliseconds: 500));
     expect(latest.length, 1);
+    expect(latest[0].progressTime, 0);
 
+    expect(latest[0].streamEntity.uid, streamEntity1.uid);
+    expect(latest[0].streamEntity.url, streamEntity1.url);
+    expect(latest[0].streamEntity.tile, streamEntity1.tile);
+    expect(latest[0].streamEntity.streamType, streamEntity1.streamType);
+    expect(latest[0].streamEntity.duration, streamEntity1.duration);
+    expect(latest[0].streamEntity.uploader, streamEntity1.uploader);
+    expect(latest[0].streamEntity.uploaderUrl, streamEntity1.uploaderUrl);
+    expect(latest[0].streamEntity.viewCount, streamEntity1.viewCount);
+    expect(latest[0].streamEntity.uploadDate, streamEntity1.uploadDate);
+
+    await historyManager.save(streamEntity2.uid);
+
+    await Future.delayed(Duration(milliseconds: 500));
+    expect(latest.length, 2);
+    expect(latest[0].progressTime, 0);
+
+    expect(latest[0].streamEntity.uid, streamEntity2.uid);
+    expect(latest[0].streamEntity.url, streamEntity2.url);
+    expect(latest[0].streamEntity.tile, streamEntity2.tile);
+    expect(latest[0].streamEntity.streamType, streamEntity2.streamType);
+    expect(latest[0].streamEntity.duration, streamEntity2.duration);
+    expect(latest[0].streamEntity.uploader, streamEntity2.uploader);
+    expect(latest[0].streamEntity.uploaderUrl, streamEntity2.uploaderUrl);
+    expect(latest[0].streamEntity.viewCount, streamEntity2.viewCount);
+    expect(latest[0].streamEntity.uploadDate, streamEntity2.uploadDate);
   });
 
+  test('Test update progress time', () async {
+    AppDatabase database = await init();
+    HistoryManager historyManager = HistoryManager(database);
+    historyManager.updateProgressTime("1", 1000);
+    int? id = await historyManager.getProgressTime("1");
+    expect(id, 1000);
+  });
 }

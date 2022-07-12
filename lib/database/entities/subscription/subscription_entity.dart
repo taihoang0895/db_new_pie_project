@@ -2,8 +2,8 @@ import 'package:floor/floor.dart';
 
 @Entity(tableName: SubscriptionEntity.tableName)
 class SubscriptionEntity {
-  @PrimaryKey(autoGenerate: true)
-  int? id;
+  @primaryKey
+  String id;
   String url;
   String name;
   String avatarUrl;

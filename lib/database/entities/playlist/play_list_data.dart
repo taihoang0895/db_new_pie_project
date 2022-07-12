@@ -8,5 +8,6 @@ class PlayListData {
   StreamEntity streamEntity;
   StreamStateEntity streamStateEntity;
 
-  PlayListData(this.playlistDetailEntity, this.streamEntity, this.streamStateEntity);
+  PlayListData(
+      this.playlistDetailEntity, this.streamEntity, this.streamStateEntity);
 }

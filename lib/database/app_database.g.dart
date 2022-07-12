@@ -61,19 +61,17 @@ class _$AppDatabase extends AppDatabase {
     changeListener = listener ?? StreamController<String>.broadcast();
   }
 
-  SearchHistoryDao? _historyDaoInstance;
+  HistoryDao? _historyDaoInstance;
 
   StreamDao? _streamDaoInstance;
 
   SubscriptionDao? _subscriptionDaoInstance;
 
-  SubscriptionDetailDao? _subscriptionDetailDaoInstance;
-
-  SubscriptionGroupDao? _subscriptionGroupDaoInstance;
-
   PlaylistDao? _playListDaoInstance;
 
   PlayListDetailsDao? _detailsDaoInstance;
+
+  SearchHistoryDao? _searchHistoryDaoInstance;
 
   Future<sqflite.Database> open(String path, List<Migration> migrations,
       [Callback? callback]) async {
@@ -94,19 +92,15 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `SearchHistory` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `search` TEXT NOT NULL, `creationDate` INTEGER NOT NULL)');
+            'CREATE TABLE IF NOT EXISTS `SearchHistory` (`search` TEXT NOT NULL, `creationDate` INTEGER NOT NULL, PRIMARY KEY (`search`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `Stream` (`uid` INTEGER NOT NULL, `url` TEXT NOT NULL, `tile` TEXT NOT NULL, `streamType` TEXT NOT NULL, `duration` INTEGER NOT NULL, `uploader` TEXT NOT NULL, `uploaderUrl` TEXT NOT NULL, `viewCount` INTEGER NOT NULL, `textualUploadDate` TEXT NOT NULL, `uploadDate` INTEGER NOT NULL, PRIMARY KEY (`uid`))');
+            'CREATE TABLE IF NOT EXISTS `Stream` (`uid` TEXT NOT NULL, `url` TEXT NOT NULL, `tile` TEXT NOT NULL, `streamType` TEXT NOT NULL, `duration` INTEGER NOT NULL, `uploader` TEXT NOT NULL, `uploaderUrl` TEXT NOT NULL, `viewCount` INTEGER NOT NULL, `textualUploadDate` TEXT NOT NULL, `uploadDate` INTEGER NOT NULL, PRIMARY KEY (`uid`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `History` (`streamId` INTEGER NOT NULL, `accessDate` INTEGER NOT NULL, `repeatCount` INTEGER NOT NULL, PRIMARY KEY (`streamId`))');
+            'CREATE TABLE IF NOT EXISTS `History` (`streamId` TEXT NOT NULL, `accessDate` INTEGER NOT NULL, `repeatCount` INTEGER NOT NULL, PRIMARY KEY (`streamId`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `StreamState` (`streamId` INTEGER NOT NULL, `progressTime` INTEGER NOT NULL, PRIMARY KEY (`streamId`))');
+            'CREATE TABLE IF NOT EXISTS `StreamState` (`streamId` TEXT NOT NULL, `progressTime` INTEGER NOT NULL, PRIMARY KEY (`streamId`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `Subscription` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `url` TEXT NOT NULL, `name` TEXT NOT NULL, `avatarUrl` TEXT NOT NULL, `subscriberCount` INTEGER NOT NULL, `description` TEXT NOT NULL)');
-        await database.execute(
-            'CREATE TABLE IF NOT EXISTS `SubscriptionGroup` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL, `iconId` INTEGER NOT NULL)');
-        await database.execute(
-            'CREATE TABLE IF NOT EXISTS `SubscriptionDetail` (`groupId` INTEGER NOT NULL, `subscriptionId` INTEGER NOT NULL, PRIMARY KEY (`groupId`, `subscriptionId`))');
+            'CREATE TABLE IF NOT EXISTS `Subscription` (`id` TEXT NOT NULL, `url` TEXT NOT NULL, `name` TEXT NOT NULL, `avatarUrl` TEXT NOT NULL, `subscriberCount` INTEGER NOT NULL, `description` TEXT NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `Playlist` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL)');
         await database.execute(
@@ -119,8 +113,8 @@ class _$AppDatabase extends AppDatabase {
   }
 
   @override
-  SearchHistoryDao get historyDao {
-    return _historyDaoInstance ??= _$SearchHistoryDao(database, changeListener);
+  HistoryDao get historyDao {
+    return _historyDaoInstance ??= _$HistoryDao(database, changeListener);
   }
 
   @override
@@ -135,18 +129,6 @@ class _$AppDatabase extends AppDatabase {
   }
 
   @override
-  SubscriptionDetailDao get subscriptionDetailDao {
-    return _subscriptionDetailDaoInstance ??=
-        _$SubscriptionDetailDao(database, changeListener);
-  }
-
-  @override
-  SubscriptionGroupDao get subscriptionGroupDao {
-    return _subscriptionGroupDaoInstance ??=
-        _$SubscriptionGroupDao(database, changeListener);
-  }
-
-  @override
   PlaylistDao get playListDao {
     return _playListDaoInstance ??= _$PlaylistDao(database, changeListener);
   }
@@ -156,20 +138,17 @@ class _$AppDatabase extends AppDatabase {
     return _detailsDaoInstance ??=
         _$PlayListDetailsDao(database, changeListener);
   }
+
+  @override
+  SearchHistoryDao get searchHistoryDao {
+    return _searchHistoryDaoInstance ??=
+        _$SearchHistoryDao(database, changeListener);
+  }
 }
 
-class _$SearchHistoryDao extends SearchHistoryDao {
-  _$SearchHistoryDao(this.database, this.changeListener)
+class _$HistoryDao extends HistoryDao {
+  _$HistoryDao(this.database, this.changeListener)
       : _queryAdapter = QueryAdapter(database, changeListener),
-        _searchHistoryEntityInsertionAdapter = InsertionAdapter(
-            database,
-            'SearchHistory',
-            (SearchHistoryEntity item) => <String, Object?>{
-                  'id': item.id,
-                  'search': item.search,
-                  'creationDate': item.creationDate
-                },
-            changeListener),
         _streamHistoryEntityInsertionAdapter = InsertionAdapter(
             database,
             'History',
@@ -186,16 +165,6 @@ class _$SearchHistoryDao extends SearchHistoryDao {
                   'streamId': item.streamId,
                   'progressTime': item.progressTime
                 }),
-        _searchHistoryEntityUpdateAdapter = UpdateAdapter(
-            database,
-            'SearchHistory',
-            ['id'],
-            (SearchHistoryEntity item) => <String, Object?>{
-                  'id': item.id,
-                  'search': item.search,
-                  'creationDate': item.creationDate
-                },
-            changeListener),
         _streamHistoryEntityUpdateAdapter = UpdateAdapter(
             database,
             'History',
@@ -205,15 +174,7 @@ class _$SearchHistoryDao extends SearchHistoryDao {
                   'accessDate': item.accessDate,
                   'repeatCount': item.repeatCount
                 },
-            changeListener),
-        _streamStateEntityUpdateAdapter = UpdateAdapter(
-            database,
-            'StreamState',
-            ['streamId'],
-            (StreamStateEntity item) => <String, Object?>{
-                  'streamId': item.streamId,
-                  'progressTime': item.progressTime
-                });
+            changeListener);
 
   final sqflite.DatabaseExecutor database;
 
@@ -221,83 +182,19 @@ class _$SearchHistoryDao extends SearchHistoryDao {
 
   final QueryAdapter _queryAdapter;
 
-  final InsertionAdapter<SearchHistoryEntity>
-      _searchHistoryEntityInsertionAdapter;
-
   final InsertionAdapter<StreamHistoryEntity>
       _streamHistoryEntityInsertionAdapter;
 
   final InsertionAdapter<StreamStateEntity> _streamStateEntityInsertionAdapter;
 
-  final UpdateAdapter<SearchHistoryEntity> _searchHistoryEntityUpdateAdapter;
-
   final UpdateAdapter<StreamHistoryEntity> _streamHistoryEntityUpdateAdapter;
 
-  final UpdateAdapter<StreamStateEntity> _streamStateEntityUpdateAdapter;
-
   @override
-  Future<List<SearchHistoryEntity>> findAll() async {
-    return _queryAdapter.queryList(
-        'SELECT * FROM SearchHistory order by creationDate DESC',
-        mapper: (Map<String, Object?> row) => SearchHistoryEntity(
-            row['id'] as int?,
-            row['search'] as String,
-            row['creationDate'] as int));
-  }
-
-  @override
-  Stream<List<SearchHistoryEntity>> findAllAsStream() {
-    return _queryAdapter.queryListStream(
-        'SELECT * FROM SearchHistory order by creationDate DESC',
-        mapper: (Map<String, Object?> row) => SearchHistoryEntity(
-            row['id'] as int?,
-            row['search'] as String,
-            row['creationDate'] as int),
-        queryableName: 'SearchHistory',
-        isView: false);
-  }
-
-  @override
-  Future<void> clearSearchHistory() async {
-    await _queryAdapter.queryNoReturn('DELETE FROM SearchHistory');
-  }
-
-  @override
-  Future<void> deleteSearchHistory(int id) async {
-    await _queryAdapter.queryNoReturn('DELETE FROM SearchHistory WHERE id = ?1',
-        arguments: [id]);
-  }
-
-  @override
-  Future<SearchHistoryEntity?> firstOrNull(String text) async {
-    return _queryAdapter.query(
-        'SELECT *  FROM SearchHistory WHERE search = ?1 LIMIT 1',
-        mapper: (Map<String, Object?> row) => SearchHistoryEntity(
-            row['id'] as int?,
-            row['search'] as String,
-            row['creationDate'] as int),
-        arguments: [text]);
-  }
-
-  @override
-  Stream<List<SearchHistoryEntity>> findSimilarText(String text, int limit) {
-    return _queryAdapter.queryListStream(
-        'SELECT *  FROM SearchHistory WHERE search LIKE ?1 || \'%\' order by creationDate DESC LIMIT ?2',
-        mapper: (Map<String, Object?> row) => SearchHistoryEntity(
-            row['id'] as int?,
-            row['search'] as String,
-            row['creationDate'] as int),
-        arguments: [text, limit],
-        queryableName: 'SearchHistory',
-        isView: false);
-  }
-
-  @override
-  Future<StreamHistoryEntity?> firstOrNullStreamHistory(int streamId) async {
+  Future<StreamHistoryEntity?> firstOrNullStreamHistory(String streamId) async {
     return _queryAdapter.query(
         'SELECT * FROM History WHERE streamId = ?1 LIMIT 1',
         mapper: (Map<String, Object?> row) => StreamHistoryEntity(
-            row['streamId'] as int,
+            row['streamId'] as String,
             row['accessDate'] as int,
             row['repeatCount'] as int),
         arguments: [streamId]);
@@ -308,7 +205,7 @@ class _$SearchHistoryDao extends SearchHistoryDao {
     return _queryAdapter.queryList(
         'SELECT * FROM History ORDER BY accessDate DESC',
         mapper: (Map<String, Object?> row) => StreamHistoryEntity(
-            row['streamId'] as int,
+            row['streamId'] as String,
             row['accessDate'] as int,
             row['repeatCount'] as int));
   }
@@ -318,7 +215,7 @@ class _$SearchHistoryDao extends SearchHistoryDao {
     return _queryAdapter.queryListStream(
         'SELECT * FROM History order by accessDate DESC',
         mapper: (Map<String, Object?> row) => StreamHistoryEntity(
-            row['streamId'] as int,
+            row['streamId'] as String,
             row['accessDate'] as int,
             row['repeatCount'] as int),
         queryableName: 'History',
@@ -326,28 +223,35 @@ class _$SearchHistoryDao extends SearchHistoryDao {
   }
 
   @override
-  Future<void> deleteStreamHistory(int id) async {
+  Future<void> deleteStreamHistory(String id) async {
     await _queryAdapter.queryNoReturn('DELETE FROM History WHERE streamId = ?1',
         arguments: [id]);
   }
 
   @override
-  Future<void> clearStreamHistory() async {
+  Future<void> clear() async {
     await _queryAdapter.queryNoReturn('DELETE FROM History');
   }
 
   @override
-  Future<StreamStateEntity?> firstOrNullStreamState(int streamId) async {
+  Future<StreamStateEntity?> firstOrNullStreamState(String streamId) async {
     return _queryAdapter.query('SELECT * FROM StreamState WHERE streamId = ?1',
         mapper: (Map<String, Object?> row) => StreamStateEntity(
-            row['streamId'] as int, row['progressTime'] as int),
+            row['streamId'] as String, row['progressTime'] as int),
         arguments: [streamId]);
   }
 
   @override
-  Future<void> insertSearchHistory(SearchHistoryEntity entity) async {
-    await _searchHistoryEntityInsertionAdapter.insert(
-        entity, OnConflictStrategy.abort);
+  Future<StreamStateEntity?> findStreamStateById(String streamId) async {
+    return _queryAdapter.query('SELECT * FROM StreamState WHERE streamId = ?1',
+        mapper: (Map<String, Object?> row) => StreamStateEntity(
+            row['streamId'] as String, row['progressTime'] as int),
+        arguments: [streamId]);
+  }
+
+  @override
+  Future<void> clearStreamState() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM StreamState');
   }
 
   @override
@@ -359,25 +263,13 @@ class _$SearchHistoryDao extends SearchHistoryDao {
   @override
   Future<void> insertStreamStateEntity(StreamStateEntity entity) async {
     await _streamStateEntityInsertionAdapter.insert(
-        entity, OnConflictStrategy.abort);
-  }
-
-  @override
-  Future<void> updateSearchHistory(SearchHistoryEntity entity) async {
-    await _searchHistoryEntityUpdateAdapter.update(
-        entity, OnConflictStrategy.abort);
+        entity, OnConflictStrategy.replace);
   }
 
   @override
   Future<void> updateStreamHistory(StreamHistoryEntity entity) async {
     await _streamHistoryEntityUpdateAdapter.update(
         entity, OnConflictStrategy.replace);
-  }
-
-  @override
-  Future<void> updateStreamStateEntity(StreamStateEntity entity) async {
-    await _streamStateEntityUpdateAdapter.update(
-        entity, OnConflictStrategy.abort);
   }
 }
 
@@ -448,7 +340,7 @@ class _$StreamDao extends StreamDao {
   final DeletionAdapter<StreamEntity> _streamEntityDeletionAdapter;
 
   @override
-  Future<void> deleteStreamById(int id) async {
+  Future<void> deleteStreamById(String id) async {
     await _queryAdapter
         .queryNoReturn('DELETE FROM Stream WHERE uid = ?1', arguments: [id]);
   }
@@ -457,7 +349,7 @@ class _$StreamDao extends StreamDao {
   Stream<List<StreamEntity>> findAllAsStream() {
     return _queryAdapter.queryListStream('SELECT * FROM Stream',
         mapper: (Map<String, Object?> row) => StreamEntity(
-            row['uid'] as int,
+            row['uid'] as String,
             row['url'] as String,
             row['tile'] as String,
             row['streamType'] as String,
@@ -472,10 +364,10 @@ class _$StreamDao extends StreamDao {
   }
 
   @override
-  Stream<StreamEntity?> findByIdAsStream(int id) {
+  Stream<StreamEntity?> findByIdAsStream(String id) {
     return _queryAdapter.queryStream('SELECT * FROM Stream WHERE uid = ?1',
         mapper: (Map<String, Object?> row) => StreamEntity(
-            row['uid'] as int,
+            row['uid'] as String,
             row['url'] as String,
             row['tile'] as String,
             row['streamType'] as String,
@@ -494,7 +386,7 @@ class _$StreamDao extends StreamDao {
   Future<StreamEntity?> findById(int id) async {
     return _queryAdapter.query('SELECT * FROM Stream WHERE uid = ?1',
         mapper: (Map<String, Object?> row) => StreamEntity(
-            row['uid'] as int,
+            row['uid'] as String,
             row['url'] as String,
             row['tile'] as String,
             row['streamType'] as String,
@@ -511,7 +403,7 @@ class _$StreamDao extends StreamDao {
   Future<List<StreamEntity>> findAll() async {
     return _queryAdapter.queryList('SELECT * FROM Stream',
         mapper: (Map<String, Object?> row) => StreamEntity(
-            row['uid'] as int,
+            row['uid'] as String,
             row['url'] as String,
             row['tile'] as String,
             row['streamType'] as String,
@@ -607,7 +499,7 @@ class _$SubscriptionDao extends SubscriptionDao {
   final DeletionAdapter<SubscriptionEntity> _subscriptionEntityDeletionAdapter;
 
   @override
-  Future<void> deleteById(int id) async {
+  Future<void> deleteById(String id) async {
     await _queryAdapter
         .queryNoReturn('DELETE FROM Subscription WHERE id=?1', arguments: [id]);
   }
@@ -616,7 +508,7 @@ class _$SubscriptionDao extends SubscriptionDao {
   Future<List<SubscriptionEntity>> findAll() async {
     return _queryAdapter.queryList('SELECT * FROM Subscription',
         mapper: (Map<String, Object?> row) => SubscriptionEntity(
-            row['id'] as int?,
+            row['id'] as String,
             row['url'] as String,
             row['name'] as String,
             row['avatarUrl'] as String,
@@ -628,7 +520,7 @@ class _$SubscriptionDao extends SubscriptionDao {
   Stream<List<SubscriptionEntity>> findAllAsStream() {
     return _queryAdapter.queryListStream('SELECT * FROM Subscription',
         mapper: (Map<String, Object?> row) => SubscriptionEntity(
-            row['id'] as int?,
+            row['id'] as String,
             row['url'] as String,
             row['name'] as String,
             row['avatarUrl'] as String,
@@ -641,31 +533,6 @@ class _$SubscriptionDao extends SubscriptionDao {
   @override
   Future<void> clear() async {
     await _queryAdapter.queryNoReturn('DELETE FROM Subscription');
-  }
-
-  @override
-  Future<List<SubscriptionEntity>> findSubscriptionOfGroup(int groupId) async {
-    return _queryAdapter.queryList(
-        'SELECT * FROM Subscription INNER JOIN SubscriptionDetail ON Subscription.id = SubscriptionDetail.subscriptionId  WHERE SubscriptionDetail.groupId = ?1',
-        mapper: (Map<String, Object?> row) => SubscriptionEntity(row['id'] as int?, row['url'] as String, row['name'] as String, row['avatarUrl'] as String, row['subscriberCount'] as int, row['description'] as String),
-        arguments: [groupId]);
-  }
-
-  @override
-  Stream<List<SubscriptionEntity>> findSubscriptionOfGroupAsStream(
-      int groupId) {
-    return _queryAdapter.queryListStream(
-        'SELECT * FROM Subscription INNER JOIN SubscriptionDetail ON Subscription.id = SubscriptionDetail.subscriptionId  WHERE SubscriptionDetail.groupId = ?1',
-        mapper: (Map<String, Object?> row) => SubscriptionEntity(
-            row['id'] as int?,
-            row['url'] as String,
-            row['name'] as String,
-            row['avatarUrl'] as String,
-            row['subscriberCount'] as int,
-            row['description'] as String),
-        arguments: [groupId],
-        queryableName: 'Subscription',
-        isView: false);
   }
 
   @override
@@ -689,221 +556,6 @@ class _$SubscriptionDao extends SubscriptionDao {
   @override
   Future<void> deleteEntity(SubscriptionEntity entity) async {
     await _subscriptionEntityDeletionAdapter.delete(entity);
-  }
-}
-
-class _$SubscriptionDetailDao extends SubscriptionDetailDao {
-  _$SubscriptionDetailDao(this.database, this.changeListener)
-      : _queryAdapter = QueryAdapter(database, changeListener),
-        _subscriptionDetailEntityInsertionAdapter = InsertionAdapter(
-            database,
-            'SubscriptionDetail',
-            (SubscriptionDetailEntity item) => <String, Object?>{
-                  'groupId': item.groupId,
-                  'subscriptionId': item.subscriptionId
-                },
-            changeListener),
-        _subscriptionDetailEntityUpdateAdapter = UpdateAdapter(
-            database,
-            'SubscriptionDetail',
-            ['groupId', 'subscriptionId'],
-            (SubscriptionDetailEntity item) => <String, Object?>{
-                  'groupId': item.groupId,
-                  'subscriptionId': item.subscriptionId
-                },
-            changeListener),
-        _subscriptionDetailEntityDeletionAdapter = DeletionAdapter(
-            database,
-            'SubscriptionDetail',
-            ['groupId', 'subscriptionId'],
-            (SubscriptionDetailEntity item) => <String, Object?>{
-                  'groupId': item.groupId,
-                  'subscriptionId': item.subscriptionId
-                },
-            changeListener);
-
-  final sqflite.DatabaseExecutor database;
-
-  final StreamController<String> changeListener;
-
-  final QueryAdapter _queryAdapter;
-
-  final InsertionAdapter<SubscriptionDetailEntity>
-      _subscriptionDetailEntityInsertionAdapter;
-
-  final UpdateAdapter<SubscriptionDetailEntity>
-      _subscriptionDetailEntityUpdateAdapter;
-
-  final DeletionAdapter<SubscriptionDetailEntity>
-      _subscriptionDetailEntityDeletionAdapter;
-
-  @override
-  Future<void> deleteById(int groupId, int subscriptionId) async {
-    await _queryAdapter.queryNoReturn(
-        'DELETE FROM SubscriptionDetail WHERE groupId = ?1 AND subscriptionId = ?2',
-        arguments: [groupId, subscriptionId]);
-  }
-
-  @override
-  Future<void> deleteByGroupId(int groupId) async {
-    await _queryAdapter.queryNoReturn(
-        'DELETE FROM SubscriptionDetail WHERE groupId = ?1',
-        arguments: [groupId]);
-  }
-
-  @override
-  Future<List<SubscriptionDetailEntity>> findByGroupId(int groupId) async {
-    return _queryAdapter.queryList(
-        'SELECT * FROM SubscriptionDetail WHERE groupId = ?1',
-        mapper: (Map<String, Object?> row) => SubscriptionDetailEntity(
-            row['groupId'] as int, row['subscriptionId'] as int),
-        arguments: [groupId]);
-  }
-
-  @override
-  Future<List<SubscriptionDetailEntity>> findAll() async {
-    return _queryAdapter.queryList('SELECT * FROM SubscriptionDetail',
-        mapper: (Map<String, Object?> row) => SubscriptionDetailEntity(
-            row['groupId'] as int, row['subscriptionId'] as int));
-  }
-
-  @override
-  Stream<List<SubscriptionDetailEntity>> findAllAsStream() {
-    return _queryAdapter.queryListStream('SELECT * FROM SubscriptionDetail',
-        mapper: (Map<String, Object?> row) => SubscriptionDetailEntity(
-            row['groupId'] as int, row['subscriptionId'] as int),
-        queryableName: 'SubscriptionDetail',
-        isView: false);
-  }
-
-  @override
-  Future<void> clear() async {
-    await _queryAdapter.queryNoReturn('DELETE FROM SubscriptionDetail');
-  }
-
-  @override
-  Future<void> insertEntity(SubscriptionDetailEntity entity) async {
-    await _subscriptionDetailEntityInsertionAdapter.insert(
-        entity, OnConflictStrategy.abort);
-  }
-
-  @override
-  Future<void> insertEntities(List<SubscriptionDetailEntity> entities) async {
-    await _subscriptionDetailEntityInsertionAdapter.insertList(
-        entities, OnConflictStrategy.abort);
-  }
-
-  @override
-  Future<void> updateEntity(SubscriptionDetailEntity entity) async {
-    await _subscriptionDetailEntityUpdateAdapter.update(
-        entity, OnConflictStrategy.abort);
-  }
-
-  @override
-  Future<void> deleteEntity(SubscriptionDetailEntity entity) async {
-    await _subscriptionDetailEntityDeletionAdapter.delete(entity);
-  }
-}
-
-class _$SubscriptionGroupDao extends SubscriptionGroupDao {
-  _$SubscriptionGroupDao(this.database, this.changeListener)
-      : _queryAdapter = QueryAdapter(database, changeListener),
-        _subscriptionGroupEntityInsertionAdapter = InsertionAdapter(
-            database,
-            'SubscriptionGroup',
-            (SubscriptionGroupEntity item) => <String, Object?>{
-                  'id': item.id,
-                  'name': item.name,
-                  'iconId': item.iconId
-                },
-            changeListener),
-        _subscriptionGroupEntityUpdateAdapter = UpdateAdapter(
-            database,
-            'SubscriptionGroup',
-            ['id'],
-            (SubscriptionGroupEntity item) => <String, Object?>{
-                  'id': item.id,
-                  'name': item.name,
-                  'iconId': item.iconId
-                },
-            changeListener),
-        _subscriptionGroupEntityDeletionAdapter = DeletionAdapter(
-            database,
-            'SubscriptionGroup',
-            ['id'],
-            (SubscriptionGroupEntity item) => <String, Object?>{
-                  'id': item.id,
-                  'name': item.name,
-                  'iconId': item.iconId
-                },
-            changeListener);
-
-  final sqflite.DatabaseExecutor database;
-
-  final StreamController<String> changeListener;
-
-  final QueryAdapter _queryAdapter;
-
-  final InsertionAdapter<SubscriptionGroupEntity>
-      _subscriptionGroupEntityInsertionAdapter;
-
-  final UpdateAdapter<SubscriptionGroupEntity>
-      _subscriptionGroupEntityUpdateAdapter;
-
-  final DeletionAdapter<SubscriptionGroupEntity>
-      _subscriptionGroupEntityDeletionAdapter;
-
-  @override
-  Future<void> deleteById(int id) async {
-    await _queryAdapter.queryNoReturn(
-        'DELETE FROM SubscriptionGroup WHERE id=?1',
-        arguments: [id]);
-  }
-
-  @override
-  Future<List<SubscriptionGroupEntity>> findAll() async {
-    return _queryAdapter.queryList('SELECT * FROM SubscriptionGroup',
-        mapper: (Map<String, Object?> row) => SubscriptionGroupEntity(
-            row['id'] as int?, row['name'] as String, row['iconId'] as int));
-  }
-
-  @override
-  Stream<List<SubscriptionGroupEntity>> findAllAsStream() {
-    return _queryAdapter.queryListStream('SELECT * FROM SubscriptionGroup',
-        mapper: (Map<String, Object?> row) => SubscriptionGroupEntity(
-            row['id'] as int?, row['name'] as String, row['iconId'] as int),
-        queryableName: 'SubscriptionGroup',
-        isView: false);
-  }
-
-  @override
-  Future<void> clear() async {
-    await _queryAdapter.queryNoReturn('DELETE FROM SubscriptionGroup');
-  }
-
-  @override
-  Future<SubscriptionGroupEntity?> firstOrNull(int id) async {
-    return _queryAdapter.query('SELECT * FROM SubscriptionGroup WHERE id = ?1',
-        mapper: (Map<String, Object?> row) => SubscriptionGroupEntity(
-            row['id'] as int?, row['name'] as String, row['iconId'] as int),
-        arguments: [id]);
-  }
-
-  @override
-  Future<int> insertEntity(SubscriptionGroupEntity entity) {
-    return _subscriptionGroupEntityInsertionAdapter.insertAndReturnId(
-        entity, OnConflictStrategy.abort);
-  }
-
-  @override
-  Future<void> updateEntity(SubscriptionGroupEntity entity) async {
-    await _subscriptionGroupEntityUpdateAdapter.update(
-        entity, OnConflictStrategy.abort);
-  }
-
-  @override
-  Future<void> deleteEntity(SubscriptionGroupEntity entity) async {
-    await _subscriptionGroupEntityDeletionAdapter.delete(entity);
   }
 }
 
@@ -1055,7 +707,7 @@ class _$PlayListDetailsDao extends PlayListDetailsDao {
   Future<List<StreamStateEntity>> getStreamFromPlayList(int playListId) async {
     return _queryAdapter.queryList(
         'SELECT pl.*,st.* FROM Playlist pl INNER JOIN  PlaylistDetail dt on pl.id = dt.playlistId INNER JOIN Stream st ON st.uid = dt.streamId INNER JOIN StreamState sst ON st.uid = sst.streamId WHERE pl.id = ?1 ORDER BY dt.joinIndex ASC',
-        mapper: (Map<String, Object?> row) => StreamStateEntity(row['streamId'] as int, row['progressTime'] as int),
+        mapper: (Map<String, Object?> row) => StreamStateEntity(row['streamId'] as String, row['progressTime'] as int),
         arguments: [playListId]);
   }
 
@@ -1118,5 +770,86 @@ class _$PlayListDetailsDao extends PlayListDetailsDao {
   Future<int> deletePlayListDetail(PlaylistDetailEntity detailEntity) {
     return _playlistDetailEntityDeletionAdapter
         .deleteAndReturnChangedRows(detailEntity);
+  }
+}
+
+class _$SearchHistoryDao extends SearchHistoryDao {
+  _$SearchHistoryDao(this.database, this.changeListener)
+      : _queryAdapter = QueryAdapter(database),
+        _searchHistoryEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'SearchHistory',
+            (SearchHistoryEntity item) => <String, Object?>{
+                  'search': item.search,
+                  'creationDate': item.creationDate
+                }),
+        _searchHistoryEntityUpdateAdapter = UpdateAdapter(
+            database,
+            'SearchHistory',
+            ['search'],
+            (SearchHistoryEntity item) => <String, Object?>{
+                  'search': item.search,
+                  'creationDate': item.creationDate
+                });
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<SearchHistoryEntity>
+      _searchHistoryEntityInsertionAdapter;
+
+  final UpdateAdapter<SearchHistoryEntity> _searchHistoryEntityUpdateAdapter;
+
+  @override
+  Future<List<SearchHistoryEntity>> findAll() async {
+    return _queryAdapter.queryList(
+        'SELECT * FROM SearchHistory order by creationDate DESC',
+        mapper: (Map<String, Object?> row) => SearchHistoryEntity(
+            row['search'] as String, row['creationDate'] as int));
+  }
+
+  @override
+  Future<void> clearSearchHistory() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM SearchHistory');
+  }
+
+  @override
+  Future<void> deleteSearchHistory(String text) async {
+    await _queryAdapter.queryNoReturn(
+        'DELETE FROM SearchHistory WHERE search = ?1',
+        arguments: [text]);
+  }
+
+  @override
+  Future<SearchHistoryEntity?> firstOrNull(String text) async {
+    return _queryAdapter.query(
+        'SELECT *  FROM SearchHistory WHERE search = ?1 LIMIT 1',
+        mapper: (Map<String, Object?> row) => SearchHistoryEntity(
+            row['search'] as String, row['creationDate'] as int),
+        arguments: [text]);
+  }
+
+  @override
+  Future<List<SearchHistoryEntity>> findSimilarText(
+      String text, int limit) async {
+    return _queryAdapter.queryList(
+        'SELECT *  FROM SearchHistory WHERE search LIKE ?1 || \'%\' order by creationDate DESC LIMIT ?2',
+        mapper: (Map<String, Object?> row) => SearchHistoryEntity(row['search'] as String, row['creationDate'] as int),
+        arguments: [text, limit]);
+  }
+
+  @override
+  Future<void> insertSearchHistory(SearchHistoryEntity entity) async {
+    await _searchHistoryEntityInsertionAdapter.insert(
+        entity, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> updateSearchHistory(SearchHistoryEntity entity) async {
+    await _searchHistoryEntityUpdateAdapter.update(
+        entity, OnConflictStrategy.abort);
   }
 }

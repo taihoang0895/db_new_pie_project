@@ -17,5 +17,5 @@ class PlaylistEntity {
     return "id $id - name : $name";
   }
 
-  static const String tableName ="Playlist";
+  static const String tableName = "Playlist";
 }
