@@ -1,7 +1,7 @@
 
 import 'package:floor/floor.dart';
 
-@Entity(tableName: StreamHistoryEntity.TABLE_NAME)
+@Entity(tableName: StreamHistoryEntity.tableName)
 class StreamHistoryEntity {
   @primaryKey
   int streamId;
@@ -9,5 +9,5 @@ class StreamHistoryEntity {
   int repeatCount;
 
   StreamHistoryEntity(this.streamId, this.accessDate, this.repeatCount);
-  static const String TABLE_NAME = "History";
+  static const String tableName = "History";
 }

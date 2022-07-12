@@ -1,10 +1,10 @@
-import 'package:db_new_pie_project/database/entities/history/StreamHistoryEntity.dart';
-import 'package:db_new_pie_project/database/entities/history/StreamStateEntity.dart';
+import 'package:db_new_pie_project/database/entities/history/stream_history_entity.dart';
+import 'package:db_new_pie_project/database/entities/history/stream_state_entity.dart';
 import 'package:floor/floor.dart';
 
 import '../../app_database.dart';
-import '../../entities/stream/StreamEntity.dart';
-import '../stream/StreamHistory.dart';
+import '../../entities/stream/stream_entity.dart';
+import '../stream/stream_history.dart';
 
 class HistoryManager {
   final AppDatabase _appDatabase;
@@ -14,8 +14,8 @@ class HistoryManager {
   HistoryManager(this._appDatabase) : _queryAdapter = _appDatabase.buildQueryAdapter();
 
   Stream<List<StreamHistory>> findAllStreamHistoryAsStream(){
-    String sql = 'SELECT * FROM (SELECT ${StreamHistoryEntity.TABLE_NAME}.*, ${StreamEntity.TABLE_NAME}.* FROM ${StreamHistoryEntity.TABLE_NAME} INNER JOIN ${StreamEntity.TABLE_NAME} ON ${StreamHistoryEntity.TABLE_NAME}.streamId = ${StreamEntity.TABLE_NAME}.uid) as stream_records'
-        ' INNER JOIN ${StreamStateEntity.TABLE_NAME} ON ${StreamStateEntity.TABLE_NAME}.streamId = stream_records.streamId ORDER BY stream_records.accessDate DESC';
+    String sql = 'SELECT * FROM (SELECT ${StreamHistoryEntity.tableName}.*, ${StreamEntity.tableName}.* FROM ${StreamHistoryEntity.tableName} INNER JOIN ${StreamEntity.tableName} ON ${StreamHistoryEntity.tableName}.streamId = ${StreamEntity.tableName}.uid) as stream_records'
+        ' INNER JOIN ${StreamStateEntity.tableName} ON ${StreamStateEntity.tableName}.streamId = stream_records.streamId ORDER BY stream_records.accessDate DESC';
 
     return _queryAdapter.queryListStream(sql,
         mapper: (Map<String, Object?> row) => StreamHistory(
@@ -39,7 +39,7 @@ class HistoryManager {
             )
 
         ),
-        queryableName: StreamHistoryEntity.TABLE_NAME,
+        queryableName: StreamHistoryEntity.tableName,
         isView: false);
   }
 
@@ -48,11 +48,11 @@ class HistoryManager {
   }
 
   Future<void> delete(int id) {
-    return _appDatabase.historyDao.deleteStreamHistory(id).then((value) => _appDatabase.notifyTableChanged(StreamHistoryEntity.TABLE_NAME));
+    return _appDatabase.historyDao.deleteStreamHistory(id).then((value) => _appDatabase.notifyTableChanged(StreamHistoryEntity.tableName));
   }
 
   Future<void> clear() {
-    return _appDatabase.historyDao.clearStreamHistory().then((value) => _appDatabase.notifyTableChanged(StreamHistoryEntity.TABLE_NAME));
+    return _appDatabase.historyDao.clearStreamHistory().then((value) => _appDatabase.notifyTableChanged(StreamHistoryEntity.tableName));
   }
 
   Stream<List<StreamHistoryEntity>> findAllHistoryEntitiesAsStream() {
@@ -83,7 +83,7 @@ class HistoryManager {
           entity.progressTime = time;
           _appDatabase.historyDao.updateStreamStateEntity(entity);
         }
-    }).then((value) => _appDatabase.notifyTableChanged(StreamHistoryEntity.TABLE_NAME));
+    }).then((value) => _appDatabase.notifyTableChanged(StreamHistoryEntity.tableName));
   }
 
   Future<StreamStateEntity?> firstOrNullStreamState(int streamId){

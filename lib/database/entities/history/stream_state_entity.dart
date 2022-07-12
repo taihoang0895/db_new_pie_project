@@ -1,12 +1,12 @@
 import 'package:floor/floor.dart';
 
-@Entity(tableName: StreamStateEntity.TABLE_NAME)
+@Entity(tableName: StreamStateEntity.tableName)
 class StreamStateEntity {
   @primaryKey
   int streamId;
   int progressTime;
 
   StreamStateEntity(this.streamId, this.progressTime);
-  static const String TABLE_NAME = "StreamState";
+  static const String tableName = "StreamState";
 
 }

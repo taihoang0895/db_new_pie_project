@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'database/app_database.dart';
 
-
-
-
 void main() {
   runApp(const MyApp());
 }

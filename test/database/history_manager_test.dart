@@ -6,14 +6,14 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:db_new_pie_project/database/app_database.dart';
-import 'package:db_new_pie_project/database/dao/stream/StreamHistory.dart';
-import 'package:db_new_pie_project/database/dao/stream/StreamManager.dart';
-import 'package:db_new_pie_project/database/entities/history/StreamHistoryEntity.dart';
-import 'package:db_new_pie_project/database/entities/history/StreamStateEntity.dart';
-import 'package:db_new_pie_project/database/entities/stream/StreamEntity.dart';
-import 'package:db_new_pie_project/database/entities/history/SearchHistoryEntity.dart';
-import 'package:db_new_pie_project/database/dao/history/HistoryManager.dart';
-import 'package:db_new_pie_project/database/dao/history/SearchHistoryManager.dart';
+import 'package:db_new_pie_project/database/dao/stream/stream_history.dart';
+import 'package:db_new_pie_project/database/dao/stream/stream_manager.dart';
+import 'package:db_new_pie_project/database/entities/history/stream_history_entity.dart';
+import 'package:db_new_pie_project/database/entities/history/stream_state_entity.dart';
+import 'package:db_new_pie_project/database/entities/stream/stream_entity.dart';
+import 'package:db_new_pie_project/database/entities/history/search_history_entity.dart';
+import 'package:db_new_pie_project/database/dao/history/histoty_manager.dart';
+import 'package:db_new_pie_project/database/dao/history/search_history_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';

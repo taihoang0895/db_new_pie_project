@@ -6,8 +6,8 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:db_new_pie_project/database/app_database.dart';
-import 'package:db_new_pie_project/database/entities/history/SearchHistoryEntity.dart';
-import 'package:db_new_pie_project/database/dao/history/SearchHistoryManager.dart';
+import 'package:db_new_pie_project/database/entities/history/search_history_entity.dart';
+import 'package:db_new_pie_project/database/dao/history/search_history_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
