@@ -12,7 +12,7 @@ import 'package:db_new_pie_project/database/dao/history/history_dao.dart';
 import 'package:db_new_pie_project/database/managers/history_manager.dart';
 import 'package:db_new_pie_project/database/dao/playlist/play_list_dao.dart';
 import 'package:db_new_pie_project/database/dao/playlist/play_list_details_dao.dart';
-import 'package:db_new_pie_project/database/manager/play_list_manager.dart';
+import 'package:db_new_pie_project/database/managers/play_list_manager.dart';
 import 'package:db_new_pie_project/database/dao/stream/stream_dao.dart';
 import 'package:db_new_pie_project/database/dao/stream/stream_manager.dart';
 import 'package:db_new_pie_project/database/entities/entities.dart';
