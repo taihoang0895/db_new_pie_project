@@ -15,7 +15,7 @@ abstract class SearchHistoryDao {
   Future<List<SearchHistoryEntity>> findAll();
 
   @Query('DELETE FROM ${SearchHistoryEntity.tableName}')
-  Future<void> clearSearchHistory();
+  Future<void> clear();
 
   @Query('DELETE FROM ${SearchHistoryEntity.tableName} WHERE search = :text')
   Future<void> deleteSearchHistory(String text);

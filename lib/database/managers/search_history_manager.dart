@@ -46,7 +46,7 @@ class SearchHistoryManager {
 
   Future<void> clear() {
     final SearchHistoryDao searchHistoryDao = _appDatabase.searchHistoryDao;
-    return searchHistoryDao.clearSearchHistory();
+    return searchHistoryDao.clear();
   }
 
   Future<List<SearchHistoryEntity>> findAll() {

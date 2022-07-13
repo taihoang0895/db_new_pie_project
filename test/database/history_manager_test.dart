@@ -28,7 +28,7 @@ void main() {
     sqfliteFfiInit();
     AppDatabase database =
         await $FloorAppDatabase.inMemoryDatabaseBuilder().build();
-    database.searchHistoryDao.clearSearchHistory();
+    database.searchHistoryDao.clear();
     database.streamDao.clear();
     database.historyDao.clear();
     database.historyDao.clearStreamState();
