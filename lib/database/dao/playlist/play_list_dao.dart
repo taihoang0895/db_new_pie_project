@@ -18,7 +18,7 @@ abstract class PlaylistDao {
   Future<PlaylistEntity?> findPlayListByID(int playListID);
 
   @Insert(onConflict: OnConflictStrategy.replace)
-  Future<void> addPlaylist(PlaylistEntity playList);
+  Future<int> addPlaylist(PlaylistEntity playList);
 
   @delete
   Future<int> deletePlayList(PlaylistEntity playlistEntity);

@@ -5,7 +5,7 @@ const playListTableName = "Playlist";
 @Entity(tableName: "Playlist")
 class PlaylistEntity {
   @PrimaryKey(autoGenerate: true)
-  int id;
+  int? id;
   String name;
 
   PlaylistEntity(this.id, this.name);

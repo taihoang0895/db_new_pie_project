@@ -22,6 +22,8 @@ import 'package:db_new_pie_project/database/entities/stream/stream_entity.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'history_manager_test.dart';
+
 
 void main() {
   Future<AppDatabase> init() async {
@@ -123,7 +125,7 @@ void main() {
     expect(latestStreams.length, 1);
     expect(latestStreams[0].streamEntity.uid, "1");
 
-    await playListManager.addStreamToPlayList(latestPlayList[0].id, "2");
+    await playListManager.addStreamToPlayList(latestPlayList[0].id!, "2");
     await Future.delayed(const Duration(milliseconds: 500));
 
     //var a = await playListManager.getStreamData(latestPlayList[0].id);
@@ -157,18 +159,28 @@ void main() {
     await clear(db);
     PlayListManager playListManager = PlayListManager(db);
 
+
     await addStream(db.streamDao, 4);
     await playListManager.createPlaylist("playList1", "1");
-
     await playListManager.addStreamToPlayList(1, "2");
-    await playListManager.addStreamToPlayList(1, "3");
+
+    List<StreamData> latestStreams = List.empty();
+
+    playListManager.getListStreamFromPlayList(1).listen((data) {
+      latestStreams = data;
+    });
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    expect(latestStreams.length, 2);
+    expect(latestStreams[0].streamEntity.uid, "1");
+    expect(latestStreams[1].streamEntity.uid, "2");
 
     await playListManager.removeStreamFromPLayList(1, "1");
-    var list = await playListManager.getStreamData(1);
 
-    expect(list.length, 2);
-    expect(list[0].streamEntity.uid, "2");
-    expect(list[1].streamEntity.uid, "3");
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    expect(latestStreams.length, 1);
+    expect(latestStreams[0].streamEntity.uid, "2");
   });
 
   test('test changeProgressTime', () async {
@@ -215,20 +227,50 @@ void main() {
     await clear(db);
     PlayListManager playListManager = PlayListManager(db);
 
-    await addStream(db.streamDao, 3);
-    await playListManager.createPlaylist("playList1", "1");
+    StreamEntity streamEntity1 = fakeStreamEntity(1);
+    StreamEntity streamEntity2 = fakeStreamEntity(2);
+    StreamEntity streamEntity3 = fakeStreamEntity(3);
+    db.streamDao.insertStreams([streamEntity1, streamEntity2, streamEntity3]);
 
-    await playListManager.addStreamToPlayList(1, "2");
-    await playListManager.addStreamToPlayList(1, "3");
-    var data = await playListManager.getStreamData(1);
+    List<PlaylistEntity> latestPlayList = List.empty();
+    List<StreamData> latestStreams = List.empty();
 
-    await playListManager.reorderListStream(1, data.reversed.toList());
+    playListManager.findAllPlayListAsStream().listen((data) {
+      latestPlayList = data;
+    });
+    await playListManager.createPlaylist("abc", streamEntity1.uid);
+    await Future.delayed(const Duration(milliseconds: 500));
+    var currentPlaylistId = latestPlayList[0].id!;
+    playListManager.getListStreamFromPlayList(currentPlaylistId).listen((data) {
+      latestStreams = data;
+    });
 
     await Future.delayed(const Duration(milliseconds: 500));
 
-    var list = await playListManager.getStreamData(1);
 
-    expect(list[0].streamEntity.uid, "3");
+    expect(latestStreams.length, 1);
+    expect(latestStreams[0].streamEntity.uid, streamEntity1.uid);
+
+    await playListManager.addStreamToPlayList(currentPlaylistId, streamEntity2.uid);
+    await Future.delayed(const Duration(milliseconds: 500));
+    expect(latestStreams.length, 2);
+    expect(latestStreams[0].streamEntity.uid, streamEntity1.uid);
+    expect(latestStreams[1].streamEntity.uid, streamEntity2.uid);
+
+    await playListManager.reorderListStream(currentPlaylistId, [latestStreams[1], latestStreams[0]]);
+    await Future.delayed(const Duration(milliseconds: 500));
+    expect(latestStreams.length, 2);
+    expect(latestStreams[0].streamEntity.uid, streamEntity2.uid);
+    expect(latestStreams[1].streamEntity.uid, streamEntity1.uid);
+
+    await playListManager.addStreamToPlayList(currentPlaylistId, streamEntity3.uid);
+    await Future.delayed(const Duration(milliseconds: 500));
+    expect(latestStreams.length, 3);
+    expect(latestStreams[0].streamEntity.uid, streamEntity2.uid);
+    expect(latestStreams[1].streamEntity.uid, streamEntity1.uid);
+    expect(latestStreams[2].streamEntity.uid, streamEntity3.uid);
+
   });
+
 }
 
